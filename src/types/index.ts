@@ -4,6 +4,11 @@ export interface User {
   name: string;
   email: string;
   profileType: 'INVESTOR' | 'BORROWER'; // Define se é Investidor ou Tomador
+  cpf?: string;
+  phone?: string;
+  birthDate?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Define a estrutura de um Empréstimo

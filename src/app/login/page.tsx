@@ -1,96 +1,112 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from '@/app/components/ui/login-ui';
+import type React from "react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
+    // Simple validation - in a real app, this would authenticate with a backend
+    if (email && password) {
+      // More robust email detection
+      const emailLower = email.toLowerCase()
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Falha no login.');
-      }
-
-      if (data.user.profileType === 'INVESTOR') {
-        router.push('/investor/dashboard');
+      if (emailLower.includes("lucas") || emailLower.includes("investidor")) {
+        router.push("/investor/dashboard")
       } else {
-        // Supondo que a outra rota seja /dashboard ou /borrower/dashboard
-        router.push('/dashboard'); 
+        router.push("/dashboard")
       }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Digite seu email abaixo para acessar sua conta.
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
+
+      {/* Main content container */}
+      <div className="relative z-10 flex flex-col items-center justify-center max-w-sm w-full space-y-8">
+        {/* App name */}
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.2s" }}>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">NextPeer</h1>
+        </div>
+
+        {/* Login form */}
+        <form onSubmit={handleLogin} className="animate-fade-in-up w-full space-y-6" style={{ animationDelay: "0.4s" }}>
+          <div className="space-y-4">
+            {/* Email field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground font-medium">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@exemplo.com"
-                required
+                placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary"
+                required
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
+
+            {/* Password field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground font-medium">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
-                required
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary"
+                required
               />
             </div>
-            {error && <p className="text-sm text-center text-red-500">{error}</p>}
-          </CardContent>
-          <CardFooter className="flex flex-col">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </Button>
-            <div className="mt-4 text-center text-sm">
-              Não tem uma conta?{" "}
-              <Link href="/signup" className="underline">
-                Cadastre-se
+
+            {/* Forgot password link */}
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
+                Esqueci minha senha?
               </Link>
             </div>
-          </CardFooter>
+          </div>
+
+          {/* Login button */}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+          >
+            Entrar
+          </Button>
         </form>
-      </Card>
+
+        {/* Sign up link */}
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.6s" }}>
+          <p className="text-muted-foreground text-sm">
+            Ainda não tem uma conta?{" "}
+            <Link href="/signup" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Crie aqui
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
