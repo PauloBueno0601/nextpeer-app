@@ -40,8 +40,11 @@ export default function LoginPage() {
       {/* Main content container */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-sm w-full space-y-8">
         {/* App name */}
-        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.2s" }}>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">NextPeer</h1>
+        <div className="animate-fade-in-up text-center relative" style={{ animationDelay: "0.2s" }}>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight relative">
+            <span className="relative z-10">NextPeer</span>
+            <div className="absolute inset-0 bg-[#34D399]/15 blur-sm rounded-lg"></div>
+          </h1>
         </div>
 
         {/* Login form */}
@@ -91,21 +94,22 @@ export default function LoginPage() {
           <Button
             type="submit"
             size="lg"
-            className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-12 text-base font-semibold text-black shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            style={{ backgroundColor: 'oklch(0.65 0.15 160)' }}
           >
             Entrar
           </Button>
         </form>
 
         {/* Sign up link */}
-        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.6s" }}>
-          <p className="text-muted-foreground text-sm">
-            Ainda não tem uma conta?{" "}
-            <Link href="/signup" className="text-primary hover:text-primary/80 font-medium transition-colors">
-              Crie aqui
-            </Link>
-          </p>
-        </div>
+            <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.6s" }}>
+              <p className="text-muted-foreground text-sm">
+                Ainda não tem uma conta?{" "}
+                <Link href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
+                  Crie aqui
+                </Link>
+              </p>
+            </div>
       </div>
     </div>
   )

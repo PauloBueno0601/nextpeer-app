@@ -22,12 +22,19 @@ export default function SplashScreen() {
       <div className="relative z-10 flex flex-col items-center justify-center max-w-sm w-full space-y-8">
         {/* Logo placeholder */}
         <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-glow">
-            <div className="w-12 h-12 bg-primary-foreground rounded-xl flex items-center justify-center">
-              <svg className="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </div>
+          <div className="w-28 h-28 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-glow bg-black relative overflow-hidden">
+            {/* Efeito de brilho suave atrás do símbolo */}
+            <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-[#34D399]/20 blur-sm"></div>
+            
+            {/* Símbolo do infinito vazado moderno - maior e mais espaçado */}
+            <svg className="w-20 h-16 relative z-10" fill="none" stroke="#34D399" strokeWidth="2.5" viewBox="0 0 20 24">
+              <path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm8 0c0-2.2-1.8-4-4-4s-4 1.8-4 4 1.8 4 4 4 4-1.8 4-4z" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"/>
+              <path d="M12 8c2.2 0 4 1.8 4 4s-1.8 4-4 4c-1.2 0-2.3-.5-3.1-1.4-.8.9-1.9 1.4-3.1 1.4-2.2 0-4-1.8-4-4s1.8-4 4-4c1.2 0 2.3.5 3.1 1.4.8-.9 1.9-1.4 3.1-1.4z" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"/>
+            </svg>
           </div>
         </div>
 
@@ -51,7 +58,8 @@ export default function SplashScreen() {
           <Button
             onClick={handleStart}
             size="lg"
-            className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-14 text-lg font-semibold text-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+            style={{ backgroundColor: 'oklch(0.65 0.15 160)' }}
           >
             Iniciar
           </Button>

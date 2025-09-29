@@ -2,219 +2,364 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft, User, Mail, Lock, Phone, CreditCard } from "lucide-react"
 import Link from "next/link"
-import { ArrowLeft, UserPlus } from "lucide-react"
 
 export default function RegisterPage() {
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
-
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
     cpf: "",
-    phone: "",
-    birthDate: "",
-    profileType: "",
+    phone: ""
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }))
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "Nome é obrigatório"
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Sobrenome é obrigatório"
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email é obrigatório"
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email inválido"
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Senha é obrigatória"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Senha deve ter pelo menos 6 caracteres"
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Confirmação de senha é obrigatória"
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Senhas não coincidem"
+    }
+
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = "CPF é obrigatório"
+    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) {
+      newErrors.cpf = "CPF deve estar no formato 000.000.000-00"
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Telefone é obrigatório"
+    } else if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(formData.phone)) {
+      newErrors.phone = "Telefone deve estar no formato (00) 00000-0000"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    
+    if (!validateForm()) {
+      return
+    }
 
+    setLoading(true)
+    
     try {
-      // Simula cadastro
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Simular delay de validação
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Aqui você integraria com o AuthController
-      // const result = await AuthController.signup(formData)
+      // Redirecionar para a tela de signup com os dados
+      const queryParams = new URLSearchParams({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        cpf: formData.cpf,
+        phone: formData.phone
+      })
       
-      router.push("/signup")
+      router.push(`/signup?${queryParams.toString()}`)
     } catch (error) {
-      console.error("Erro ao cadastrar:", error)
+      console.error("Erro no cadastro:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '')
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  }
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '')
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-card border-b border-border px-6 py-4">
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="w-10 h-10"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Criar Conta</h1>
-            <p className="text-sm text-muted-foreground">Preencha seus dados para começar</p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
 
-      <div className="p-6">
-        <Card className="max-w-2xl mx-auto">
+      {/* Main content container */}
+      <div className="relative z-10 flex flex-col items-center justify-center max-w-md w-full space-y-6">
+        {/* Header */}
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.2s" }}>
+          <div className="flex items-center justify-center mb-4">
+            <Link href="/login" className="absolute left-0">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight relative">
+              <span className="relative z-10">NextPeer</span>
+              <div className="absolute inset-0 bg-[#34D399]/15 blur-sm rounded-lg"></div>
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-sm">Crie sua conta para começar</p>
+        </div>
+
+        {/* Registration form */}
+        <Card className="w-full animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <UserPlus className="w-5 h-5" />
-              <span>Dados Pessoais</span>
-            </CardTitle>
+            <CardTitle className="text-xl text-center">Informações Pessoais</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Nome e Sobrenome */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Ex: João Silva"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    required
-                  />
+                  <Label htmlFor="firstName" className="text-foreground font-medium">
+                    Nome *
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                        errors.firstName ? 'border-red-500' : ''
+                      }`}
+                    />
+                  </div>
+                  {errors.firstName && (
+                    <p className="text-red-500 text-xs">{errors.firstName}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="lastName" className="text-foreground font-medium">
+                    Sobrenome *
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      placeholder="Seu sobrenome"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                        errors.lastName ? 'border-red-500' : ''
+                      }`}
+                    />
+                  </div>
+                  {errors.lastName && (
+                    <p className="text-red-500 text-xs">{errors.lastName}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground font-medium">
+                  Email *
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="Ex: joao@email.com"
+                    placeholder="seu@email.com"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
+                    onChange={handleInputChange}
+                    className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                      errors.email ? 'border-red-500' : ''
+                    }`}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs">{errors.email}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Mínimo 8 caracteres"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Digite a senha novamente"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
+              {/* CPF */}
+              <div className="space-y-2">
+                <Label htmlFor="cpf" className="text-foreground font-medium">
+                  CPF *
+                </Label>
+                <div className="relative">
+                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="cpf"
+                    name="cpf"
                     type="text"
                     placeholder="000.000.000-00"
                     value={formData.cpf}
-                    onChange={(e) => handleInputChange("cpf", e.target.value)}
-                    required
+                    onChange={(e) => {
+                      const formatted = formatCPF(e.target.value)
+                      setFormData(prev => ({ ...prev, cpf: formatted }))
+                    }}
+                    maxLength={14}
+                    className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                      errors.cpf ? 'border-red-500' : ''
+                    }`}
                   />
                 </div>
+                {errors.cpf && (
+                  <p className="text-red-500 text-xs">{errors.cpf}</p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+              {/* Telefone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-foreground font-medium">
+                  Telefone *
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="phone"
+                    name="phone"
                     type="tel"
-                    placeholder="(11) 99999-9999"
+                    placeholder="(00) 00000-0000"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    required
+                    onChange={(e) => {
+                      const formatted = formatPhone(e.target.value)
+                      setFormData(prev => ({ ...prev, phone: formatted }))
+                    }}
+                    maxLength={15}
+                    className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                      errors.phone ? 'border-red-500' : ''
+                    }`}
                   />
                 </div>
+                {errors.phone && (
+                  <p className="text-red-500 text-xs">{errors.phone}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="birthDate">Data de Nascimento</Label>
+              {/* Senha */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground font-medium">
+                  Senha *
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="birthDate"
-                    type="date"
-                    value={formData.birthDate}
-                    onChange={(e) => handleInputChange("birthDate", e.target.value)}
-                    required
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                      errors.password ? 'border-red-500' : ''
+                    }`}
                   />
                 </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs">{errors.password}</p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="profileType">Tipo de Conta</Label>
-                  <Select value={formData.profileType} onValueChange={(value) => handleInputChange("profileType", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="BORROWER">Tomador de Empréstimo</SelectItem>
-                      <SelectItem value="INVESTOR">Investidor</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Confirmação de Senha */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-foreground font-medium">
+                  Confirmar Senha *
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Digite a senha novamente"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className={`pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary ${
+                      errors.confirmPassword ? 'border-red-500' : ''
+                    }`}
+                  />
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-xs">{errors.confirmPassword}</p>
+                )}
               </div>
 
-              <div className="pt-6">
-                <Button
-                  type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Criando conta...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Criar Conta
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Já tem uma conta?{" "}
-                  <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
-                    Faça login
-                  </Link>
-                </p>
-              </div>
+              {/* Submit button */}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={loading}
+                className="w-full h-12 text-base font-semibold text-black shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
+                style={{ backgroundColor: 'oklch(0.65 0.15 160)' }}
+              >
+                {loading ? "Processando..." : "Continuar"}
+              </Button>
             </form>
           </CardContent>
         </Card>
+
+        {/* Login link */}
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.6s" }}>
+          <p className="text-muted-foreground text-sm">
+            Já tem uma conta?{" "}
+            <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Fazer login
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

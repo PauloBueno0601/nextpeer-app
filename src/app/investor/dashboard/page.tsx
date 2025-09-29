@@ -124,8 +124,8 @@ export default function InvestorDashboard() {
         </div>
       </div>
 
-      <div className="px-6 py-6 pb-20 space-y-6">
-        {/* Metrics Cards */}
+      {/* Metrics Cards - Fixed */}
+      <div className="px-6 py-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -181,8 +181,10 @@ export default function InvestorDashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
 
-        {/* Tab Content */}
+      {/* Tab Content - Dynamic */}
+      <div className="px-6 pb-24">
         {activeTab === "oportunidades" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">

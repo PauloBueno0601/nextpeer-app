@@ -1,8 +1,25 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { DollarSign, TrendingUp } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function SignupPage() {
+function SignupContent() {
+  const searchParams = useSearchParams()
+  
+  // Dados recebidos do formulário anterior
+  const firstName = searchParams.get("firstName") || ""
+  const lastName = searchParams.get("lastName") || ""
+  const email = searchParams.get("email") || ""
+  const cpf = searchParams.get("cpf") || ""
+  const phone = searchParams.get("phone") || ""
+
+  // Construir URLs com os dados
+  const borrowerUrl = `/verification?type=borrower&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&cpf=${encodeURIComponent(cpf)}&phone=${encodeURIComponent(phone)}`
+  const investorUrl = `/verification?type=investor&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&cpf=${encodeURIComponent(cpf)}&phone=${encodeURIComponent(phone)}`
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -21,7 +38,7 @@ export default function SignupPage() {
         {/* Option cards */}
         <div className="animate-fade-in-up w-full space-y-4">
           {/* Borrower card */}
-          <Link href="/verification" className="block">
+          <Link href={borrowerUrl} className="block">
             <Card className="border-border bg-card hover:bg-accent/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg cursor-pointer">
               <CardContent className="p-6 flex items-center space-x-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -36,7 +53,7 @@ export default function SignupPage() {
           </Link>
 
           {/* Investor card - Fixed to go through proper KYC flow */}
-          <Link href="/verification?type=investor" className="block">
+          <Link href={investorUrl} className="block">
             <Card className="border-border bg-card hover:bg-accent/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg cursor-pointer">
               <CardContent className="p-6 flex items-center space-x-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -62,5 +79,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SignupContent />
+    </Suspense>
   )
 }

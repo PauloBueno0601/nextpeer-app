@@ -10,6 +10,13 @@ import { Suspense } from "react"
 function VerificationContent() {
   const searchParams = useSearchParams()
   const userType = searchParams.get("type") // 'investor' or null (default to borrower)
+  
+  // Dados do usuário
+  const firstName = searchParams.get("firstName") || ""
+  const lastName = searchParams.get("lastName") || ""
+  const email = searchParams.get("email") || ""
+  const cpf = searchParams.get("cpf") || ""
+  const phone = searchParams.get("phone") || ""
 
   const nextStep = userType === "investor" ? "/investor/financial-data" : "/credit-analysis"
 
@@ -23,7 +30,7 @@ function VerificationContent() {
       {/* Main content container */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-md w-full space-y-8">
         {/* Header */}
-        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.2s", opacity: 0 }}>
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.2s" }}>
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Shield className="w-8 h-8 text-primary" />
           </div>
@@ -31,8 +38,25 @@ function VerificationContent() {
           <p className="text-muted-foreground text-sm">Complete as duas etapas para prosseguir</p>
         </div>
 
+        {/* User Info Summary */}
+        {firstName && lastName && (
+          <div className="animate-fade-in-up w-full" style={{ animationDelay: "0.3s" }}>
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-2">Dados do Usuário</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="text-muted-foreground">Nome:</span> {firstName} {lastName}</p>
+                  <p><span className="text-muted-foreground">Email:</span> {email}</p>
+                  <p><span className="text-muted-foreground">CPF:</span> {cpf}</p>
+                  <p><span className="text-muted-foreground">Telefone:</span> {phone}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Verification steps */}
-        <div className="animate-fade-in-up w-full space-y-4" style={{ animationDelay: "0.4s", opacity: 0 }}>
+        <div className="animate-fade-in-up w-full space-y-4" style={{ animationDelay: "0.4s" }}>
           {/* Step 1: Document verification */}
           <Card className="border-border bg-card">
             <CardContent className="p-6">
@@ -60,7 +84,7 @@ function VerificationContent() {
                   <span className="text-accent font-semibold text-sm">2</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Prova de Vida</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Verificação de Identidade</h3>
                   <p className="text-sm text-muted-foreground">
                     Faça a verificação facial para confirmar sua identidade
                   </p>
@@ -81,7 +105,7 @@ function VerificationContent() {
         </div>
 
         {/* Progress indicator */}
-        <div className="animate-fade-in-up w-full" style={{ animationDelay: "0.6s", opacity: 0 }}>
+        <div className="animate-fade-in-up w-full" style={{ animationDelay: "0.6s" }}>
           <div className="flex items-center justify-center space-x-2">
             <div className="w-2 h-2 bg-muted rounded-full"></div>
             <div className="w-2 h-2 bg-muted rounded-full"></div>

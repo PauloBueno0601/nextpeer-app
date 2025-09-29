@@ -62,10 +62,10 @@ const config: Config = {
         },
         "pulse-glow": {
           "0%, 100%": {
-            boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
+            boxShadow: "0 0 20px rgba(52, 211, 153, 0.3)",
           },
           "50%": {
-            boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+            boxShadow: "0 0 30px rgba(52, 211, 153, 0.5)",
           },
         },
       },
