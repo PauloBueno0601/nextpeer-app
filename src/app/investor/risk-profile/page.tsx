@@ -320,12 +320,12 @@ export default function RiskProfilePage() {
               </div>
 
               <div className="pt-6">
-                <Button
-                  onClick={() => router.push("/investor/dashboard")}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Continuar para o Dashboard
-                </Button>
+                  <Button
+                    onClick={() => router.push("/investor/open-finance")}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Continuar para Open Finance
+                  </Button>
             </div>
             </CardContent>
           </Card>
