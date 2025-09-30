@@ -32,7 +32,7 @@ function SignupContent() {
         {/* Title */}
         <div className="animate-fade-in-up text-center">
           <h1 className="text-2xl font-bold text-foreground tracking-tight mb-2">Qual seu objetivo?</h1>
-          <p className="text-muted-foreground text-sm">Escolha como você quer usar o NextPeer</p>
+          <p className="text-muted-foreground text-sm">Escolha como você quer usar o NexPeer</p>
         </div>
 
         {/* Option cards */}

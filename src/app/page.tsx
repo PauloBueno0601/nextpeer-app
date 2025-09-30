@@ -40,7 +40,7 @@ export default function SplashScreen() {
 
         {/* App name */}
         <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.4s" }}>
-          <h1 className="text-4xl font-bold text-foreground tracking-tight">NextPeer</h1>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">NexPeer</h1>
         </div>
 
         {/* Slogan */}

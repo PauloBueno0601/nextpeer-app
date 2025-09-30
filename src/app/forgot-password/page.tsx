@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         {/* App name */}
         <div className="animate-fade-in-up text-center relative" style={{ animationDelay: "0.2s" }}>
           <h1 className="text-3xl font-bold text-foreground tracking-tight relative">
-            <span className="relative z-10">NextPeer</span>
+            <span className="relative z-10">NexPeer</span>
             <div className="absolute inset-0 bg-[#34D399]/15 blur-sm rounded-lg"></div>
           </h1>
         </div>
