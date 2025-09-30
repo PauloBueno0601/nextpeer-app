@@ -238,6 +238,7 @@ export default function LoanDetailsPage() {
                     <Input
                       id="amount"
                       type="number"
+                      min="0"
                       placeholder="Ex: 1000"
                       value={investmentAmount}
                       onChange={(e) => setInvestmentAmount(e.target.value)}

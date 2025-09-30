@@ -61,7 +61,8 @@ export default function LoginPage() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary"
+                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary focus:bg-input focus:text-foreground"
+                style={{ backgroundColor: 'hsl(var(--input))', color: 'hsl(var(--foreground))' }}
                 required
               />
             </div>
@@ -77,7 +78,8 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary"
+                className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary focus:bg-input focus:text-foreground"
+                style={{ backgroundColor: 'hsl(var(--input))', color: 'hsl(var(--foreground))' }}
                 required
               />
             </div>

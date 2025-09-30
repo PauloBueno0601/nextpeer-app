@@ -17,7 +17,6 @@ export default function FinancialDataPage() {
     monthlyIncome: "",
     monthlyExpenses: "",
     investmentCapacity: "",
-    riskProfile: "",
     investmentGoals: "",
     experience: "",
   })
@@ -27,13 +26,23 @@ export default function FinancialDataPage() {
     setLoading(true)
 
     try {
+      // Salvar dados financeiros no localStorage para usar na risk-profile
+      const financialData = {
+        rendaMensal: parseFloat(formData.monthlyIncome),
+        gastosMensais: parseFloat(formData.monthlyExpenses),
+        capacidadeInvestimento: parseFloat(formData.investmentCapacity),
+        patrimonio: parseFloat(formData.monthlyIncome) * 12 * 2, // Estimativa baseada na renda
+        objetivos: formData.investmentGoals,
+        experiencia: formData.experience
+      }
+      
+      localStorage.setItem('financialData', JSON.stringify(financialData))
+      
       // Simula envio dos dados
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Aqui você integraria com o controller para salvar os dados
-      // await InvestorController.updateFinancialData(formData)
-      
-      router.push("/investor/dashboard")
+      // Redirecionar para o questionário de adequação
+      router.push("/investor/risk-profile")
     } catch (error) {
       console.error("Erro ao salvar dados:", error)
     } finally {
@@ -62,7 +71,7 @@ export default function FinancialDataPage() {
           </Button>
           <div>
             <h1 className="text-xl font-bold text-foreground">Dados Financeiros</h1>
-            <p className="text-sm text-muted-foreground">Complete seu perfil de investidor</p>
+            <p className="text-sm text-muted-foreground">Informe seus dados financeiros para análise</p>
           </div>
         </div>
       </div>
@@ -71,6 +80,9 @@ export default function FinancialDataPage() {
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Informações Financeiras</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Seu perfil de risco será determinado através de um questionário de adequação CVM
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -80,6 +92,7 @@ export default function FinancialDataPage() {
                   <Input
                     id="monthlyIncome"
                     type="number"
+                    min="0"
                     placeholder="Ex: 15000"
                     value={formData.monthlyIncome}
                     onChange={(e) => handleInputChange("monthlyIncome", e.target.value)}
@@ -92,6 +105,7 @@ export default function FinancialDataPage() {
                   <Input
                     id="monthlyExpenses"
                     type="number"
+                    min="0"
                     placeholder="Ex: 8000"
                     value={formData.monthlyExpenses}
                     onChange={(e) => handleInputChange("monthlyExpenses", e.target.value)}
@@ -105,6 +119,7 @@ export default function FinancialDataPage() {
                 <Input
                   id="investmentCapacity"
                   type="number"
+                  min="0"
                   placeholder="Ex: 5000"
                   value={formData.investmentCapacity}
                   onChange={(e) => handleInputChange("investmentCapacity", e.target.value)}
@@ -112,19 +127,6 @@ export default function FinancialDataPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="riskProfile">Perfil de Risco</Label>
-                <Select value={formData.riskProfile} onValueChange={(value) => handleInputChange("riskProfile", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione seu perfil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="conservative">Conservador</SelectItem>
-                    <SelectItem value="moderate">Moderado</SelectItem>
-                    <SelectItem value="aggressive">Agressivo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="investmentGoals">Objetivos de Investimento</Label>
@@ -166,12 +168,12 @@ export default function FinancialDataPage() {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Salvando...
+                      Processando...
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Salvar Dados
+                      Continuar para Questionário
                     </>
                   )}
                 </Button>

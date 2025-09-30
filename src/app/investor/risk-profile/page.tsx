@@ -1,54 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react"
 
 export default function RiskProfilePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [completed, setCompleted] = useState(false)
+  const [saving, setSaving] = useState(false)
   const router = useRouter()
 
   const questions = [
     {
       id: 1,
-      question: "Qual é o seu objetivo principal com os investimentos?",
+      question: "Qual é o seu principal objetivo com este investimento?",
       options: [
-        { value: "conservative", label: "Preservar o capital com baixo risco" },
-        { value: "moderate", label: "Crescimento moderado com risco controlado" },
-        { value: "aggressive", label: "Máximo crescimento, aceito riscos altos" }
+        { value: "A", label: "Preservar meu capital com baixo risco", points: 1 },
+        { value: "B", label: "Um equilíbrio entre segurança e rentabilidade", points: 2 },
+        { value: "C", label: "Maximizar os retornos, mesmo que isso envolva mais risco", points: 3 }
       ]
     },
     {
       id: 2,
-      question: "Como você reagiria a uma queda de 20% no valor dos seus investimentos?",
+      question: "Por quanto tempo você pretende manter seus investimentos nesta plataforma?",
       options: [
-        { value: "conservative", label: "Venderia imediatamente para evitar mais perdas" },
-        { value: "moderate", label: "Aguardaria para ver se recupera" },
-        { value: "aggressive", label: "Aumentaria os investimentos aproveitando a oportunidade" }
+        { value: "A", label: "Curto prazo (até 1 ano)", points: 1 },
+        { value: "B", label: "Médio prazo (de 1 a 3 anos)", points: 2 },
+        { value: "C", label: "Longo prazo (mais de 3 anos)", points: 3 }
       ]
     },
     {
       id: 3,
-      question: "Qual é o seu horizonte de investimento?",
+      question: "Como você reagiria se sua carteira de investimentos P2P caísse 20% em um mês devido à inadimplência?",
       options: [
-        { value: "conservative", label: "Até 1 ano" },
-        { value: "moderate", label: "1 a 3 anos" },
-        { value: "aggressive", label: "Mais de 3 anos" }
+        { value: "A", label: "Resgataria todo o dinheiro para evitar mais perdas", points: 1 },
+        { value: "B", label: "Manteria a posição, pois entendo a volatilidade", points: 2 },
+        { value: "C", label: "Investiria mais, aproveitando a oportunidade", points: 3 }
       ]
     },
     {
       id: 4,
-      question: "Que porcentagem da sua renda você está disposto a investir?",
+      question: "Qual é a sua experiência com investimentos em renda fixa?",
       options: [
-        { value: "conservative", label: "Até 10%" },
-        { value: "moderate", label: "10% a 25%" },
-        { value: "aggressive", label: "Mais de 25%" }
+        { value: "A", label: "Nenhuma experiência", points: 1 },
+        { value: "B", label: "Alguma experiência (1-3 anos)", points: 2 },
+        { value: "C", label: "Experiência significativa (mais de 3 anos)", points: 3 }
+      ]
+    },
+    {
+      id: 5,
+      question: "Qual é a sua experiência com investimentos em renda variável?",
+      options: [
+        { value: "A", label: "Nenhuma experiência", points: 1 },
+        { value: "B", label: "Alguma experiência (1-3 anos)", points: 2 },
+        { value: "C", label: "Experiência significativa (mais de 3 anos)", points: 3 }
+      ]
+    },
+    {
+      id: 6,
+      question: "Que porcentagem da sua renda mensal você está disposto a investir?",
+      options: [
+        { value: "A", label: "Até 10% da renda", points: 1 },
+        { value: "B", label: "10% a 25% da renda", points: 2 },
+        { value: "C", label: "Mais de 25% da renda", points: 3 }
+      ]
+    },
+    {
+      id: 7,
+      question: "Qual é a sua tolerância a perdas temporárias?",
+      options: [
+        { value: "A", label: "Não tolero perdas", points: 1 },
+        { value: "B", label: "Tolero perdas de até 10%", points: 2 },
+        { value: "C", label: "Tolero perdas de mais de 10%", points: 3 }
       ]
     }
   ]
@@ -60,11 +88,26 @@ export default function RiskProfilePage() {
     }))
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1)
-      } else {
-      setCompleted(true)
+    } else {
+      // Calcular e salvar o perfil de risco
+      const riskProfile = calculateRiskProfile()
+      
+      // Buscar dados financeiros do localStorage ou usar valores padrão
+      const financialData = JSON.parse(localStorage.getItem('financialData') || '{}')
+      const rendaMensal = financialData.rendaMensal || 10000
+      const patrimonio = financialData.patrimonio || 50000
+      
+      try {
+        await saveRiskProfile(riskProfile, rendaMensal, patrimonio)
+        setCompleted(true)
+      } catch (error) {
+        console.error('Erro ao salvar perfil:', error)
+        // Ainda assim mostrar o resultado, mas sem salvar
+        setCompleted(true)
+      }
     }
   }
 
@@ -75,49 +118,123 @@ export default function RiskProfilePage() {
   }
 
   const calculateRiskProfile = () => {
-    const values = Object.values(answers)
-    const conservative = values.filter(v => v === "conservative").length
-    const moderate = values.filter(v => v === "moderate").length
-    const aggressive = values.filter(v => v === "aggressive").length
+    let totalPoints = 0
+    
+    // Calcular pontos baseados nas respostas
+    Object.entries(answers).forEach(([questionIndex, answerValue]) => {
+      const question = questions[parseInt(questionIndex)]
+      const selectedOption = question.options.find(opt => opt.value === answerValue)
+      if (selectedOption) {
+        totalPoints += selectedOption.points
+      }
+    })
 
-    if (aggressive >= moderate && aggressive >= conservative) return "aggressive"
-    if (moderate >= conservative) return "moderate"
-    return "conservative"
+    // Determinar perfil baseado na pontuação
+    const maxPoints = questions.length * 3 // Máximo possível
+    const percentage = (totalPoints / maxPoints) * 100
+
+    if (percentage <= 40) return "CONSERVADOR"
+    if (percentage <= 70) return "MODERADO"
+    return "AGRESSIVO"
+  }
+
+  const calculateInvestmentLimit = (riskProfile: string, rendaMensal: number, patrimonio: number) => {
+    // Fatores de segurança
+    const fatorRenda = 0.3 // 30% da renda mensal
+    const fatorPatrimonio = 0.1 // 10% do patrimônio
+
+    // Calcular base segura
+    const baseRenda = rendaMensal * fatorRenda
+    const basePatrimonio = patrimonio * fatorPatrimonio
+    const base = Math.min(baseRenda, basePatrimonio)
+
+    // Multiplicadores por perfil
+    const multiplicadores = {
+      'CONSERVADOR': 0.5,
+      'MODERADO': 1.0,
+      'AGRESSIVO': 2.0
+    }
+
+    const multiplicador = multiplicadores[riskProfile as keyof typeof multiplicadores] || 1.0
+    const limiteFinal = base * multiplicador
+
+    return {
+      base,
+      multiplicador,
+      limiteFinal: Math.round(limiteFinal),
+      rendaMensal,
+      patrimonio
+    }
+  }
+
+  const saveRiskProfile = async (riskProfile: string, rendaMensal: number, patrimonio: number) => {
+    setSaving(true)
+    try {
+      // Calcular limite de investimento
+      const limiteCalculado = calculateInvestmentLimit(riskProfile, rendaMensal, patrimonio)
+
+      const response = await fetch('/api/investor/risk-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          perfilRisco: riskProfile,
+          rendaMensal: limiteCalculado.rendaMensal,
+          patrimonioTotal: limiteCalculado.patrimonio,
+          limiteInvestimento: limiteCalculado.limiteFinal
+        })
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao salvar perfil de risco')
+      }
+
+      return { ...data, limiteCalculado }
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error)
+      throw error
+    } finally {
+      setSaving(false)
+    }
   }
 
   const getRiskProfileInfo = (profile: string) => {
     switch (profile) {
-      case "conservative":
+      case "CONSERVADOR":
         return {
           title: "Perfil Conservador",
-          description: "Você prefere segurança e estabilidade nos investimentos.",
+          description: "Você prefere segurança e estabilidade nos investimentos P2P.",
           characteristics: [
             "Baixa tolerância ao risco",
             "Foco na preservação do capital",
-            "Retornos mais previsíveis",
-            "Ideal para objetivos de curto prazo"
+            "Investimentos de curto prazo",
+            "Prioriza liquidez e segurança"
           ]
         }
-      case "moderate":
+      case "MODERADO":
         return {
           title: "Perfil Moderado",
-          description: "Você busca equilíbrio entre risco e retorno.",
+          description: "Você busca equilíbrio entre risco e retorno nos investimentos P2P.",
           characteristics: [
             "Tolerância média ao risco",
             "Busca crescimento com segurança",
             "Diversificação de investimentos",
-            "Ideal para objetivos de médio prazo"
+            "Horizonte de médio prazo"
           ]
         }
-      case "aggressive":
+      case "AGRESSIVO":
         return {
-          title: "Perfil Agressivo",
-          description: "Você está disposto a assumir riscos para obter maiores retornos.",
+          title: "Perfil Arrojado",
+          description: "Você está disposto a assumir riscos para obter maiores retornos nos investimentos P2P.",
           characteristics: [
             "Alta tolerância ao risco",
             "Foco no crescimento do capital",
-            "Aceita volatilidade",
-            "Ideal para objetivos de longo prazo"
+            "Aceita volatilidade do mercado",
+            "Horizonte de longo prazo"
           ]
         }
       default:
@@ -128,6 +245,12 @@ export default function RiskProfilePage() {
   if (completed) {
     const riskProfile = calculateRiskProfile()
     const profileInfo = getRiskProfileInfo(riskProfile)
+    
+    // Buscar dados financeiros para calcular limite
+    const financialData = JSON.parse(localStorage.getItem('financialData') || '{}')
+    const rendaMensal = financialData.rendaMensal || 10000
+    const patrimonio = financialData.patrimonio || 50000
+    const limiteCalculado = calculateInvestmentLimit(riskProfile, rendaMensal, patrimonio)
 
   return (
       <div className="min-h-screen bg-background">
@@ -168,7 +291,33 @@ export default function RiskProfilePage() {
                     </li>
                   ))}
                 </ul>
-          </div>
+              </div>
+
+              <div className="bg-muted/20 rounded-lg p-4">
+                <h3 className="font-semibold text-foreground mb-3">Limite de Investimento Calculado:</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Renda Mensal:</span>
+                    <span className="text-foreground">R$ {rendaMensal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Patrimônio:</span>
+                    <span className="text-foreground">R$ {patrimonio.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base Segura:</span>
+                    <span className="text-foreground">R$ {limiteCalculado.base.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Multiplicador:</span>
+                    <span className="text-foreground">{limiteCalculado.multiplicador}x</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-primary border-t pt-2">
+                    <span>Limite Total:</span>
+                    <span>R$ {limiteCalculado.limiteFinal.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
 
               <div className="pt-6">
                 <Button
@@ -239,10 +388,17 @@ export default function RiskProfilePage() {
               </Button>
               <Button
                 onClick={handleNext}
-                disabled={!answers[currentQuestion]}
+                disabled={!answers[currentQuestion] || saving}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {currentQuestion === questions.length - 1 ? "Finalizar" : "Próxima"}
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  currentQuestion === questions.length - 1 ? "Finalizar" : "Próxima"
+                )}
               </Button>
                 </div>
               </CardContent>

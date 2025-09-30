@@ -82,6 +82,7 @@ export default function RequestLoanPage() {
                   <Input
                     id="amount"
                     type="number"
+                    min="0"
                     placeholder="Ex: 5000"
                     value={formData.amount}
                     onChange={(e) => handleInputChange("amount", e.target.value)}
@@ -123,6 +124,7 @@ export default function RequestLoanPage() {
                   <Input
                     id="monthlyIncome"
                     type="number"
+                    min="0"
                     placeholder="Ex: 8000"
                     value={formData.monthlyIncome}
                     onChange={(e) => handleInputChange("monthlyIncome", e.target.value)}

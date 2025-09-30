@@ -154,11 +154,11 @@ export default function RegisterPage() {
         </div>
 
         {/* Registration form */}
-        <Card className="w-full animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-          <CardHeader>
-            <CardTitle className="text-xl text-center">Informações Pessoais</CardTitle>
+        <Card className="w-full animate-fade-in-up bg-card border-border" style={{ animationDelay: "0.4s" }}>
+          <CardHeader className="bg-card">
+            <CardTitle className="text-xl text-center text-card-foreground">Informações Pessoais</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-card">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Nome e Sobrenome */}
               <div className="grid grid-cols-2 gap-4">
