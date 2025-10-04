@@ -15,7 +15,7 @@ export default function InvestmentsPage() {
   const investments = [
     {
       id: "1",
-      loanId: "loan-1",
+      loanId: "emp_1",
       borrowerName: "Ana C.",
       amount: 5000,
       expectedReturn: 1080,
@@ -28,6 +28,44 @@ export default function InvestmentsPage() {
       progress: 0,
     },
   ]
+
+  const [contractOpen, setContractOpen] = useState(false)
+  const [contractLoading, setContractLoading] = useState(false)
+  const [contract, setContract] = useState<null | {
+    id: string
+    loanId: string
+    investorId: string
+    borrowerId: string
+    hashContrato: string
+    simulatedAddress: string
+    pdfUrl: string
+  }>(null)
+
+  const handleViewContract = async (inv: typeof investments[number]) => {
+    setContractLoading(true)
+    try {
+      const resp = await fetch('/api/investor/contract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          loanId: inv.loanId,
+          investorId: 'u_maria',
+          principal: inv.amount,
+          monthlyRate: inv.interestRate / 100,
+          termMonths: inv.term
+        })
+      })
+      const data = await resp.json()
+      if (data?.success) {
+        setContract(data.contract)
+        setContractOpen(true)
+      }
+    } catch (e) {
+      // noop MVP
+    } finally {
+      setContractLoading(false)
+    }
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -166,9 +204,9 @@ export default function InvestmentsPage() {
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Detalhes
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewContract(investment)} disabled={contractLoading}>
                       <Calendar className="w-4 h-4 mr-2" />
-                      Cronograma
+                      {contractLoading ? 'Carregando...' : 'Contrato'}
                     </Button>
                   </div>
                 </CardContent>
@@ -177,6 +215,30 @@ export default function InvestmentsPage() {
           </div>
         )}
       </div>
+
+      {contractOpen && contract && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Contrato (simulado)</h2>
+            </div>
+            <div className="p-6 space-y-4 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Empréstimo</span><span className="text-foreground">{contract.loanId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Investidor</span><span className="text-foreground">{contract.investorId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Tomador</span><span className="text-foreground">{contract.borrowerId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contract.hashContrato}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Endereço (simulado)</span><span className="text-foreground break-all">{contract.simulatedAddress}</span></div>
+              <div className="h-[70vh] border border-border rounded overflow-hidden">
+                <iframe src={contract.pdfUrl} className="w-full h-full" title="Contrato PDF" />
+              </div>
+            </div>
+            <div className="p-6 border-t border-border flex justify-between">
+              <a href={contract.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
+              <Button onClick={() => setContractOpen(false)}>Fechar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

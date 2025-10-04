@@ -47,6 +47,8 @@ export default function BorrowerDashboard() {
   const [showNotificationsPopup, setShowNotificationsPopup] = useState(false)
   const [showLoanDetailsModal, setShowLoanDetailsModal] = useState(false)
   const [selectedLoan, setSelectedLoan] = useState<any>(null)
+  const [showContractModal, setShowContractModal] = useState(false)
+  const [contractData, setContractData] = useState<null | { pdfUrl: string; hashContrato: string; simulatedAddress: string }>(null)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
@@ -248,6 +250,35 @@ export default function BorrowerDashboard() {
     setShowLoanDetailsModal(true)
   }
 
+  const handleOpenContract = async (loan: any) => {
+    try {
+      const resp = await fetch(`/api/contracts/${loan.id}`)
+      const data = await resp.json()
+      if (data?.success && data.contract) {
+        setContractData({
+          pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf`,
+          hashContrato: data.contract.hashContrato ?? '—',
+          simulatedAddress: data.contract.simulatedAddress ?? '—'
+        })
+        setShowContractModal(true)
+      } else {
+        setContractData({
+          pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+          hashContrato: '—',
+          simulatedAddress: '—'
+        })
+        setShowContractModal(true)
+      }
+    } catch (_) {
+      setContractData({
+        pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+        hashContrato: '—',
+        simulatedAddress: '—'
+      })
+      setShowContractModal(true)
+    }
+  }
+
   // Loading states
   if (authLoading || loading) {
     return (
@@ -428,7 +459,7 @@ export default function BorrowerDashboard() {
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Detalhes
                     </Button>
-                    <Button size="sm" variant="default">
+                    <Button size="sm" variant="default" onClick={() => handleOpenContract(loansData[0])}>
                       <FileText className="w-4 h-4 mr-2" />
                       Contrato
                     </Button>
@@ -482,7 +513,7 @@ export default function BorrowerDashboard() {
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Detalhes
                     </Button>
-                    <Button size="sm" variant="default">
+                    <Button size="sm" variant="default" onClick={() => handleOpenContract(loansData[1])}>
                       <FileText className="w-4 h-4 mr-2" />
                       Contrato
                     </Button>
@@ -908,6 +939,30 @@ export default function BorrowerDashboard() {
           </div>
         )}
       </div>
+
+      {/* Contract Modal */}
+      {showContractModal && contractData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+            </div>
+            <div className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contractData.hashContrato}</span></div>
+                <div className="flex justify-between md:col-span-2"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all">{contractData.simulatedAddress}</span></div>
+              </div>
+              <div className="h-[70vh] border border-border rounded overflow-hidden">
+                <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
+              </div>
+            </div>
+            <div className="p-6 border-t border-border flex justify-between">
+              <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
+              <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border">
@@ -1569,3 +1624,6 @@ export default function BorrowerDashboard() {
     </div>
   )
 }
+
+// Contract Modal
+// Inserted near end of component render
