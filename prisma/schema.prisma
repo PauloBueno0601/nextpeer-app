@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Usuario {
@@ -43,7 +43,7 @@ model Usuario {
 model PerfilTomador {
   usuarioId       String  @id @map("usuario_id")
   scoreCredito    Int?    @map("score_credito")
-  limiteCredito   Decimal? @map("limite_credito") @db.Decimal(12, 2)
+  limiteCredito   Decimal? @map("limite_credito") 
   openFinanceFake Json?   @map("open_finance_fake")
   criadoEm        DateTime @default(now()) @map("criado_em")
 
@@ -55,10 +55,10 @@ model PerfilTomador {
 
 model PerfilInvestidor {
   usuarioId         String  @id @map("usuario_id")
-  rendaMensal       Decimal? @map("renda_mensal") @db.Decimal(12, 2)
-  patrimonioTotal   Decimal? @map("patrimonio_total") @db.Decimal(15, 2)
+  rendaMensal       Decimal? @map("renda_mensal") 
+  patrimonioTotal   Decimal? @map("patrimonio_total") 
   perfilRisco       PerfilRisco? @map("perfil_risco")
-  limiteInvestimento Decimal? @map("limite_investimento") @db.Decimal(12, 2)
+  limiteInvestimento Decimal? @map("limite_investimento") 
   openFinanceFake   Json?   @map("open_finance_fake")
   criadoEm          DateTime @default(now()) @map("criado_em")
 
@@ -72,9 +72,9 @@ model Emprestimo {
   id            String      @id @default(cuid())
   tomadorId     String      @map("tomador_id")
   status        StatusEmprestimo @default(PENDENTE)
-  valorSolicitado Decimal   @map("valor_solicitado") @db.Decimal(12, 2)
-  valorAprovado Decimal?    @map("valor_aprovado") @db.Decimal(12, 2)
-  taxaJuros     Decimal?    @map("taxa_juros") @db.Decimal(5, 2)
+  valorSolicitado Decimal   @map("valor_solicitado") 
+  valorAprovado Decimal?    @map("valor_aprovado") 
+  taxaJuros     Decimal?    @map("taxa_juros") 
   prazoMeses    Int         @map("prazo_meses")
   finalidade    String?
   financiadoEm  DateTime?   @map("financiado_em")
@@ -94,7 +94,7 @@ model Investimento {
   id            String      @id @default(cuid())
   emprestimoId  String      @unique @map("emprestimo_id")
   investidorId  String      @map("investidor_id")
-  valorInvestido Decimal    @map("valor_investido") @db.Decimal(12, 2)
+  valorInvestido Decimal    @map("valor_investido") 
   status        StatusInvestimento @default(ATIVO)
   criadoEm      DateTime    @default(now()) @map("criado_em")
 
@@ -128,8 +128,8 @@ model ContratoCcb {
 model Parcela {
   id            String      @id @default(cuid())
   emprestimoId  String      @map("emprestimo_id")
-  dataVencimento DateTime   @map("data_vencimento") @db.Date
-  valorParcela  Decimal     @map("valor_parcela") @db.Decimal(12, 2)
+  dataVencimento DateTime   @map("data_vencimento")
+  valorParcela  Decimal     @map("valor_parcela")
   pagoEm        DateTime?   @map("pago_em")
   status        StatusParcela @default(PENDENTE)
   criadoEm      DateTime    @default(now()) @map("criado_em")
@@ -145,8 +145,8 @@ model Repasse {
   id              String    @id @default(cuid())
   parcelaId       String    @map("parcela_id")
   investidorId    String    @map("investidor_id")
-  valorRepassado  Decimal   @map("valor_repassado") @db.Decimal(12, 2)
-  taxaPlataforma  Decimal   @default(0.00) @map("taxa_plataforma") @db.Decimal(12, 2)
+  valorRepassado  Decimal   @map("valor_repassado") 
+  taxaPlataforma  Decimal   @default(0.00) @map("taxa_plataforma") 
   dataRepassado   DateTime? @map("data_repassado")
   criadoEm        DateTime  @default(now()) @map("criado_em")
 

@@ -15,68 +15,117 @@ export interface SignupData extends LoginCredentials {
 }
 
 export class AuthController {
-  private static users: User[] = [
-    // Usuários de exemplo removidos - agora será baseado no email cadastrado
-  ]
-
   static async login(credentials: LoginCredentials): Promise<{ user: User; token: string } | null> {
-    const user = this.users.find((u) => u.email === credentials.email)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      })
 
-    if (!user) {
+      const data = await response.json()
+      
+      if (!data.success) {
+        return null
+      }
+
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.nome,
+          cpf: data.user.cpf,
+          phone: data.user.telefone,
+          profileType: data.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+          kycStatus: data.user.statusKyc
+        },
+        token: data.token
+      }
+    } catch (error) {
+      console.error('Erro no login:', error)
       return null
     }
-
-    // In a real app, you'd verify the password hash
-    const token = btoa(`${user.id}:${Date.now()}`)
-
-    return { user, token }
   }
 
   static async signup(data: SignupData): Promise<{ user: User; token: string }> {
-    if (!UserModel.validateEmail(data.email)) {
-      throw new Error("Email inválido")
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          nome: data.name,
+          cpf: data.cpf,
+          telefone: data.phone,
+          tipoPerfil: data.profileType === 'BORROWER' ? 'TOMADOR' : 'INVESTOR'
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Erro no cadastro')
+      }
+
+      return {
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.nome,
+          cpf: result.user.cpf,
+          phone: result.user.telefone,
+          profileType: result.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+          kycStatus: result.user.statusKyc
+        },
+        token: result.token
+      }
+    } catch (error) {
+      console.error('Erro no cadastro:', error)
+      throw error
     }
-
-    if (!UserModel.validateCPF(data.cpf)) {
-      throw new Error("CPF inválido")
-    }
-
-    const existingUser = this.users.find((u) => u.email === data.email)
-    if (existingUser) {
-      throw new Error("Email já cadastrado")
-    }
-
-    // Usar email como nome de usuário
-    const emailName = data.email.split('@')[0]
-    const displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1)
-
-    const user = UserModel.createUser({
-      email: data.email,
-      name: displayName, // Usar email como nome
-      cpf: data.cpf,
-      phone: data.phone,
-      birthDate: data.birthDate,
-      profileType: data.profileType,
-    })
-
-    this.users.push(user)
-    const token = btoa(`${user.id}:${Date.now()}`)
-
-    return { user, token }
   }
 
   static async getCurrentUser(token: string): Promise<User | null> {
     try {
-      const decoded = atob(token)
-      const [userId] = decoded.split(":")
-      return this.users.find((u) => u.id === userId) || null
-    } catch {
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        return null
+      }
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        return null
+      }
+
+      return {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.nome,
+        cpf: data.user.cpf,
+        phone: data.user.telefone,
+        profileType: data.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+        kycStatus: data.user.statusKyc
+      }
+    } catch (error) {
+      console.error('Erro ao buscar usuário:', error)
       return null
     }
   }
 
   static getUserByEmail(email: string): User | null {
-    return this.users.find((u) => u.email === email) || null
+    // Esta função não é mais necessária com a integração do banco
+    return null
   }
 
   static isInvestor(user: User): boolean {
