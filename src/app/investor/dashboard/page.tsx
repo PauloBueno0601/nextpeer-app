@@ -29,6 +29,7 @@ export default function InvestorDashboard() {
   const [loading, setLoading] = useState(true)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedInvestment, setSelectedInvestment] = useState<any>(null)
+  const [showProfilePopup, setShowProfilePopup] = useState(false)
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
 
@@ -103,8 +104,8 @@ export default function InvestorDashboard() {
         term: 12,
         monthlyPayment: 506.90,
         totalAmount: 6082.80,
-        startDate: "2024-01-15",
-        endDate: "2025-01-15",
+        startDate: "2025-07-04",
+        endDate: "2026-07-04",
         status: "Ativo",
         progress: 25,
         paidInstallments: 3,
@@ -114,7 +115,7 @@ export default function InvestorDashboard() {
         amount: 5000,
         expectedReturn: 1080,
         currentReturn: 0,
-        nextPayment: "2024-11-15",
+        nextPayment: "2025-11-15",
         nextPaymentAmount: 506.90
       }
     },
@@ -138,8 +139,8 @@ export default function InvestorDashboard() {
         term: 18,
         monthlyPayment: 206.50,
         totalAmount: 3717.00,
-        startDate: "2024-10-01",
-        endDate: "2026-04-01",
+        startDate: "2025-09-01",
+        endDate: "2027-03-01",
         status: "Ativo",
         progress: 6,
         paidInstallments: 1,
@@ -149,7 +150,7 @@ export default function InvestorDashboard() {
         amount: 3000,
         expectedReturn: 720,
         currentReturn: 0,
-        nextPayment: "2024-11-20",
+        nextPayment: "2025-11-01",
         nextPaymentAmount: 206.50
       }
     }
@@ -177,7 +178,7 @@ export default function InvestorDashboard() {
   }
 
   const handleProfileClick = () => {
-    router.push("/profile")
+    setShowProfilePopup(true)
   }
 
   // Loading states
@@ -217,7 +218,7 @@ export default function InvestorDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => setActiveTab("notificacoes")}>
               <Bell className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -730,6 +731,7 @@ export default function InvestorDashboard() {
             </Card>
           </div>
         )}
+
       </div>
 
       {/* Bottom Tab Bar */}
@@ -910,6 +912,144 @@ export default function InvestorDashboard() {
                 <Button className="flex-1">
                   <FileText className="w-4 h-4 mr-2" />
                   Ver Contrato Completo
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup de Perfil do Usuário */}
+      {showProfilePopup && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Perfil do Investidor</h2>
+                  <p className="text-sm text-muted-foreground">Dados da sua conta</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProfilePopup(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-6">
+                {/* Informações Pessoais */}
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Informações Pessoais</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-muted-foreground">Nome Completo</label>
+                      <p className="font-medium text-foreground">{user?.name || "Investidor"}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">Email</label>
+                      <p className="font-medium text-foreground">{user?.email || "investidor@nexpeer.com"}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">CPF</label>
+                      <p className="font-medium text-foreground">{user?.cpf || "123.456.789-00"}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">Telefone</label>
+                      <p className="font-medium text-foreground">{user?.phone || "(11) 99999-9999"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status da Conta */}
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Status da Conta</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Tipo de Perfil</span>
+                      <Badge className="bg-primary/10 text-primary">
+                        Investidor
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Status</span>
+                      <Badge className="bg-green-100 text-green-800">
+                        <Activity className="w-3 h-3 mr-1" />
+                        Ativo
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Data de Cadastro</span>
+                      <span className="font-medium text-foreground">15/03/2024</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estatísticas de Investimento */}
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Estatísticas de Investimento</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-foreground">R$ 8.000</div>
+                      <div className="text-sm text-muted-foreground">Total Investido</div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-foreground">2</div>
+                      <div className="text-sm text-muted-foreground">Investimentos Ativos</div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-foreground">R$ 720</div>
+                      <div className="text-sm text-muted-foreground">Retorno Esperado</div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-foreground">9.0%</div>
+                      <div className="text-sm text-muted-foreground">Taxa Média</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-border bg-muted/30">
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setShowProfilePopup(false)}
+                >
+                  Fechar
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowProfilePopup(false)
+                    router.push("/profile")
+                  }}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Editar Perfil
+                </Button>
+                <Button 
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowProfilePopup(false)
+                    router.push("/login")
+                  }}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
                 </Button>
               </div>
             </div>
