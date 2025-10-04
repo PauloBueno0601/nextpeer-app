@@ -10,6 +10,42 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 
+// Contas de teste disponíveis
+const TEST_ACCOUNTS = [
+  {
+    id: "borrower-ana",
+    name: "Ana Silva",
+    email: "ana@nexpeer.com",
+    password: "123456",
+    role: "Tomador",
+    description: "Solicitante de empréstimo"
+  },
+  {
+    id: "borrower-carlos",
+    name: "Carlos Santos", 
+    email: "carlos@nexpeer.com",
+    password: "123456",
+    role: "Tomador",
+    description: "Solicitante de empréstimo"
+  },
+  {
+    id: "investor-maria",
+    name: "Maria Oliveira",
+    email: "maria@nexpeer.com", 
+    password: "123456",
+    role: "Investidor",
+    description: "Investidor ativo"
+  },
+  {
+    id: "investor-joao",
+    name: "João Costa",
+    email: "joao@nexpeer.com",
+    password: "123456", 
+    role: "Investidor",
+    description: "Investidor ativo"
+  }
+]
+
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
@@ -17,6 +53,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showTestModal, setShowTestModal] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +75,30 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError("Erro ao fazer login. Tente novamente.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleQuickLogin = async (account: typeof TEST_ACCOUNTS[0]) => {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const result = await login(account.email, account.password)
+      
+      if (result) {
+        // Redirecionar baseado no tipo de perfil
+        if (result.user.profileType === "INVESTOR") {
+          router.push("/investor/dashboard")
+        } else {
+          router.push("/borrower/dashboard")
+        }
+      } else {
+        setError("Erro ao fazer login rápido")
+      }
+    } catch (err) {
+      setError("Erro ao fazer login rápido. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -77,12 +138,14 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="email"
+                name="login-email"
                 type="email"
-                placeholder="ana@nexpeer.com"
+                placeholder="Digite seu email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary focus:bg-input focus:text-foreground"
                 style={{ backgroundColor: 'hsl(var(--input))', color: 'hsl(var(--foreground))' }}
+                autoComplete="off"
                 required
                 disabled={isLoading}
               />
@@ -95,12 +158,14 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="password"
+                name="login-password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Digite sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary focus:bg-input focus:text-foreground"
                 style={{ backgroundColor: 'hsl(var(--input))', color: 'hsl(var(--foreground))' }}
+                autoComplete="off"
                 required
                 disabled={isLoading}
               />
@@ -126,13 +191,15 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Test credentials */}
-        <div className="animate-fade-in-up bg-blue-50 border border-blue-200 rounded-lg p-4 w-full" style={{ animationDelay: "0.6s" }}>
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">🧪 Dados de Teste:</h3>
-          <div className="space-y-1 text-xs text-blue-700">
-            <div><strong>Tomador:</strong> ana@nexpeer.com / 123456</div>
-            <div><strong>Investidor:</strong> maria@nexpeer.com / 123456</div>
-          </div>
+        {/* Test credentials button */}
+        <div className="animate-fade-in-up w-full" style={{ animationDelay: "0.6s" }}>
+          <Button
+            variant="outline"
+            onClick={() => setShowTestModal(true)}
+            className="w-full h-12 text-sm font-medium border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+          >
+            Ver Dados de Teste
+          </Button>
         </div>
 
         {/* Sign up link */}
@@ -145,6 +212,66 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Test Accounts Modal */}
+      {showTestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Contas de Teste</h2>
+              <button
+                onClick={() => setShowTestModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              <p className="text-sm text-muted-foreground mb-4">
+                Clique em uma conta para fazer login automaticamente:
+              </p>
+              
+              {TEST_ACCOUNTS.map((account) => (
+                <div key={account.id} className="border border-border rounded-lg p-4 hover:border-primary/30 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-foreground">{account.name}</h3>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      account.role === "Tomador" 
+                        ? "bg-primary/10 text-primary" 
+                        : "bg-green-500/10 text-green-600"
+                    }`}>
+                      {account.role}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{account.email}</p>
+                  <p className="text-xs text-muted-foreground mb-3">{account.description}</p>
+                  <Button
+                    onClick={() => handleQuickLogin(account)}
+                    disabled={isLoading}
+                    className="w-full h-8 text-xs"
+                    size="sm"
+                    style={{ backgroundColor: 'oklch(0.65 0.15 160)' }}
+                  >
+                    {isLoading ? "Entrando..." : "Fazer Login"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-border bg-muted/30">
+              <p className="text-xs text-muted-foreground text-center">
+                Todas as contas usam a senha: <strong>123456</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
