@@ -7,6 +7,7 @@ export interface User {
   cpf?: string;
   phone?: string;
   birthDate?: string;
+  kycStatus?: string; // Status de verificação KYC
   createdAt?: Date;
   updatedAt?: Date;
 }
