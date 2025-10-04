@@ -336,27 +336,6 @@ export default function ChatBot({ className }: ChatBotProps) {
               </div>
             </div>
           )}
-
-          {/* Input */}
-          <div className="p-3 border-t bg-background">
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Digite sua pergunta..."
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim()}
-                size="icon"
-                className="h-10 w-10"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
         </Card>
       )}
     </div>
