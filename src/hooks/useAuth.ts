@@ -9,14 +9,18 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simula carregamento de usuário logado
+    // Carregar usuário logado
     const token = localStorage.getItem('auth_token')
     if (token) {
       AuthController.getCurrentUser(token).then(currentUser => {
         setUser(currentUser)
+        setLoading(false)
+      }).catch(() => {
+        setLoading(false)
       })
+    } else {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   const login = async (email: string, password: string) => {
