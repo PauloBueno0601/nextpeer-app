@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,14 +34,29 @@ export default function BorrowerDashboard() {
   const [showCongratulations, setShowCongratulations] = useState(true)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
+
+  // Proteção de rotas
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login")
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  // Redirecionar se não for tomador
+  useEffect(() => {
+    if (user && user.profileType !== "BORROWER") {
+      router.push("/investor/dashboard")
+    }
+  }, [user, router])
 
   const dashboardData = {
     user: {
-      id: "1",
-      name: "Ana C.",
-      email: "ana@nextpeer.com",
-      cpf: "123.456.789-00",
-      phone: "(11) 99999-9999",
+      id: user?.id || "1",
+      name: user?.name || "Usuário",
+      email: user?.email || "user@nexpeer.com",
+      cpf: user?.cpf || "123.456.789-00",
+      phone: user?.phone || "(11) 99999-9999",
       profileType: "BORROWER" as const,
     },
     metrics: {
@@ -79,7 +95,8 @@ export default function BorrowerDashboard() {
     router.push("/profile")
   }
 
-  if (loading) {
+  // Loading states
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -88,6 +105,11 @@ export default function BorrowerDashboard() {
         </div>
       </div>
     )
+  }
+
+  // Se não estiver autenticado, não renderizar nada (será redirecionado)
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
@@ -128,7 +150,7 @@ export default function BorrowerDashboard() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Olá, {dashboardData.user.name}</h1>
-              <p className="text-muted-foreground">Bem-vinda de volta!</p>
+              <p className="text-muted-foreground">Bem-vindo de volta!</p>
             </div>
           </div>
           <div className="relative">
