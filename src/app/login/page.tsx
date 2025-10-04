@@ -54,6 +54,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showTestModal, setShowTestModal] = useState(false)
+  const [loginLoadingId, setLoginLoadingId] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,8 +82,8 @@ export default function LoginPage() {
   }
 
   const handleQuickLogin = async (account: typeof TEST_ACCOUNTS[0]) => {
-    setIsLoading(true)
     setError("")
+    setLoginLoadingId(account.id)
 
     try {
       const result = await login(account.email, account.password)
@@ -100,7 +101,7 @@ export default function LoginPage() {
     } catch (err) {
       setError("Erro ao fazer login rápido. Tente novamente.")
     } finally {
-      setIsLoading(false)
+      setLoginLoadingId(null)
     }
   }
 
@@ -252,12 +253,12 @@ export default function LoginPage() {
                   <p className="text-xs text-muted-foreground mb-3">{account.description}</p>
                   <Button
                     onClick={() => handleQuickLogin(account)}
-                    disabled={isLoading}
+                    disabled={loginLoadingId === account.id}
                     className="w-full h-8 text-xs"
                     size="sm"
                     style={{ backgroundColor: 'oklch(0.65 0.15 160)' }}
                   >
-                    {isLoading ? "Entrando..." : "Fazer Login"}
+                    {loginLoadingId === account.id ? "Entrando..." : "Fazer Login"}
                   </Button>
                 </div>
               ))}

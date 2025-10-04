@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/database'
 import bcrypt from 'bcryptjs'
+import { Client } from 'pg'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,21 +13,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário no banco
-    const user = await prisma.usuario.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        senhaHash: true,
-        nome: true,
-        sobrenome: true,
-        cpf: true,
-        telefone: true,
-        tipoPerfil: true,
-        statusKyc: true
-      }
+    // Conectar ao PostgreSQL (Supabase) diretamente (evita dependência do Prisma Client)
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL?.includes('supabase.com') ? { rejectUnauthorized: false } : undefined
     })
+    await client.connect()
+
+    const { rows } = await client.query(
+      `SELECT 
+         id,
+         email,
+         senha_hash AS "senhaHash",
+         nome,
+         sobrenome,
+         cpf,
+         telefone,
+         tipo_perfil AS "tipoPerfil",
+         status_kyc AS "statusKyc"
+       FROM usuarios
+       WHERE email = $1
+       LIMIT 1`,
+      [email]
+    )
+    const user = rows[0]
 
     if (!user) {
       return NextResponse.json(
@@ -49,14 +58,20 @@ export async function POST(request: NextRequest) {
     const { senhaHash: _, ...userWithoutPassword } = user
 
     // Log da ação
-    await prisma.logAcao.create({
-      data: {
-        usuarioId: user.id,
-        acao: 'login',
-        descricao: 'Usuário fez login no sistema',
-        ipOrigem: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-      }
-    })
+    try {
+      await client.query(
+        `INSERT INTO logs_acoes (id, usuario_id, acao, descricao, ip_origem, criado_em)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())`,
+        [
+          user.id,
+          'login',
+          'Usuário fez login no sistema',
+          request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+        ]
+      )
+    } catch {}
+
+    await client.end()
 
     return NextResponse.json({
       success: true,
