@@ -158,7 +158,7 @@ export default function DashboardPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Olá, {dashboardData.user.name}</h1>
-              <p className="text-muted-foreground">Bem-vinda de volta!</p>
+              <p className="text-muted-foreground">Bem-vindo de volta!</p>
             </div>
           </div>
           <div className="relative">
