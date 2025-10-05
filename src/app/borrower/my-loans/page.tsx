@@ -11,6 +11,8 @@ import { ArrowLeft, Plus, Eye, Download } from "lucide-react"
 export default function MyLoansPage() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const [showContractModal, setShowContractModal] = useState(false)
+  const [contractData, setContractData] = useState<null | { pdfUrl: string; hashContrato: string; simulatedAddress: string }>(null)
 
   const loans = [
     {
@@ -153,7 +155,37 @@ export default function MyLoansPage() {
                       Ver Detalhes
                     </Button>
                     {loan.status === "active" && (
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={async () => {
+                          try {
+                            const resp = await fetch(`/api/contracts/${loan.id}`)
+                            const data = await resp.json()
+                            if (data?.success && data.contract) {
+                              setContractData({
+                                pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf`,
+                                hashContrato: data.contract.hashContrato ?? '—',
+                                simulatedAddress: data.contract.simulatedAddress ?? '—'
+                              })
+                            } else {
+                              setContractData({
+                                pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+                                hashContrato: '—',
+                                simulatedAddress: '—'
+                              })
+                            }
+                          } catch (_) {
+                            setContractData({
+                              pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+                              hashContrato: '—',
+                              simulatedAddress: '—'
+                            })
+                          }
+                          setShowContractModal(true)
+                        }}
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Contrato
                       </Button>
@@ -165,6 +197,28 @@ export default function MyLoansPage() {
           </div>
         )}
       </div>
+      {showContractModal && contractData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+            </div>
+            <div className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contractData.hashContrato}</span></div>
+                <div className="flex justify-between md:col-span-2"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all">{contractData.simulatedAddress}</span></div>
+              </div>
+              <div className="h-[70vh] border border-border rounded overflow-hidden">
+                <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
+              </div>
+            </div>
+            <div className="p-6 border-t border-border flex justify-between">
+              <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
+              <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
