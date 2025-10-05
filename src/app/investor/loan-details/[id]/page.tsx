@@ -44,13 +44,36 @@ export default function LoanDetailsPage() {
 
   // Buscar empréstimo específico
   useEffect(() => {
-    if (params.id && loans.length > 0) {
+    if (params.id) {
+      // Primeiro, tentar encontrar nos empréstimos do contexto
       const foundLoan = loans.find(l => l.id === params.id)
       if (foundLoan) {
         setLoan(foundLoan)
-      } else {
-        router.push("/investor/dashboard")
+        return
       }
+      
+      // Se não encontrou, verificar se é uma oportunidade de exemplo
+      if (params.id.startsWith('opp_')) {
+        const exampleLoan = {
+          id: params.id,
+          amount: params.id === 'opp_1' ? 3000 : params.id === 'opp_2' ? 5000 : 2500,
+          purpose: params.id === 'opp_1' ? 'Expansão da padaria' : params.id === 'opp_2' ? 'Equipamentos para oficina' : 'Capital de giro',
+          interestRate: params.id === 'opp_1' ? 2.2 : params.id === 'opp_2' ? 2.5 : 1.9,
+          term: params.id === 'opp_1' ? 12 : params.id === 'opp_2' ? 18 : 8,
+          status: 'Pendente',
+          progress: 0,
+          borrower: {
+            name: params.id === 'opp_1' ? 'Carlos M.' : params.id === 'opp_2' ? 'Ana L.' : 'Roberto S.',
+            email: params.id === 'opp_1' ? 'carlos@email.com' : params.id === 'opp_2' ? 'ana@email.com' : 'roberto@email.com',
+            score: params.id === 'opp_1' ? 720 : params.id === 'opp_2' ? 680 : 750
+          }
+        }
+        setLoan(exampleLoan)
+        return
+      }
+      
+      // Se não encontrou nem é uma oportunidade de exemplo, redirecionar
+      router.push("/investor/dashboard")
     }
   }, [params.id, loans, router])
 

@@ -87,7 +87,7 @@ export default function BorrowerDashboard() {
     },
     metrics: {
       totalAmount: 13000,
-      activeCount: 2,
+      activeCount: 2 + userLoans.length, // Contagem dinâmica baseada nos empréstimos reais
       creditScore: 780,
       availableLimit: 2000,
     },
@@ -195,7 +195,7 @@ export default function BorrowerDashboard() {
       id: "2", 
       parcela: "2/12",
       valor: 506.90,
-      vencimento: "2025-10-01",
+      vencimento: "2025-09-30",
       status: "Vencido",
       investidor: {
         nome: "João Costa",
@@ -211,7 +211,7 @@ export default function BorrowerDashboard() {
       id: "3",
       parcela: "3/12", 
       valor: 506.90,
-      vencimento: "2025-10-08",
+      vencimento: "2025-10-12",
       status: "Próximo do vencimento",
       investidor: {
         nome: "Ana Silva",
@@ -467,7 +467,7 @@ export default function BorrowerDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Empréstimos Ativos</h2>
-              <Badge variant="default">{loansData.length + userLoans.length} empréstimo(s)</Badge>
+              <Badge variant="default">{dashboardData.metrics.activeCount} empréstimo(s)</Badge>
             </div>
 
             <div className="space-y-4">
@@ -775,7 +775,8 @@ export default function BorrowerDashboard() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      variant="outline"
+                      className="border-primary/20 hover:bg-primary/10 text-primary hover:text-primary"
                       onClick={() => handleViewBoleto(boletosData[0])}
                     >
                       <Eye className="w-4 h-4 mr-2" />
@@ -800,7 +801,7 @@ export default function BorrowerDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-foreground">R$ 506,90</p>
-                      <p className="text-xs text-red-600">Venc: 01/10/2025</p>
+                      <p className="text-xs text-red-600">Venc: 30/09/2025</p>
                     </div>
                   </div>
 
@@ -811,7 +812,8 @@ export default function BorrowerDashboard() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="bg-red-600 hover:bg-red-700 text-white"
+                      variant="outline"
+                      className="border-destructive/20 hover:bg-destructive/10 text-destructive hover:text-destructive"
                       onClick={() => handleViewBoleto(boletosData[1])}
                     >
                       <Eye className="w-4 h-4 mr-2" />
@@ -836,7 +838,7 @@ export default function BorrowerDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-foreground">R$ 506,90</p>
-                      <p className="text-xs text-yellow-600">Venc: 08/10/2025</p>
+                      <p className="text-xs text-yellow-600">Venc: 12/10/2025</p>
                     </div>
                   </div>
 
@@ -847,7 +849,8 @@ export default function BorrowerDashboard() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                      variant="outline"
+                      className="border-orange-200 hover:bg-orange-50 text-orange-600 hover:text-orange-700"
                       onClick={() => handleViewBoleto(boletosData[2])}
                     >
                       <Eye className="w-4 h-4 mr-2" />
@@ -1789,15 +1792,15 @@ export default function BorrowerDashboard() {
                   <h3 className="text-lg font-semibold text-foreground mb-4">Estatísticas</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">R$ 5.000</div>
+                      <div className="text-2xl font-bold text-foreground">R$ {dashboardData.metrics.totalAmount.toLocaleString()}</div>
                       <div className="text-sm text-muted-foreground">Total Emprestado</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">1</div>
+                      <div className="text-2xl font-bold text-foreground">{dashboardData.metrics.activeCount}</div>
                       <div className="text-sm text-muted-foreground">Empréstimos Ativos</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">R$ 15.000</div>
+                      <div className="text-2xl font-bold text-foreground">R$ {dashboardData.metrics.availableLimit.toLocaleString()}</div>
                       <div className="text-sm text-muted-foreground">Limite Disponível</div>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-4">

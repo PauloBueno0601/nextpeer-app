@@ -33,6 +33,7 @@ export default function InvestorDashboard() {
   const [showProfilePopup, setShowProfilePopup] = useState(false)
   const [contractOpen, setContractOpen] = useState(false)
   const [contractLoading, setContractLoading] = useState(false)
+  const [investingLoanId, setInvestingLoanId] = useState<string | null>(null)
   const [contract, setContract] = useState<null | {
     id: string
     loanId: string
@@ -70,7 +71,7 @@ export default function InvestorDashboard() {
     metrics: {
       totalAmount: 8000,
       averageReturn: 450,
-      activeCount: 2,
+      activeCount: 2, // Investimentos ativos fixos no dashboard do investidor
     },
     notifications: [
       {
@@ -83,20 +84,69 @@ export default function InvestorDashboard() {
     ],
   }
 
-  // Obter empréstimos disponíveis do contexto
-  const availableInvestments = getAvailableLoans().map(loan => ({
-    id: loan.id,
-    borrower: { 
-      name: loan.borrower?.name || "Usuário", 
-      score: loan.borrower?.score || 750 
+  // Obter empréstimos disponíveis do contexto + oportunidades de exemplo
+  const contextLoans = getAvailableLoans()
+  
+  // Oportunidades de exemplo para demonstração
+  const exampleOpportunities = [
+    {
+      id: "opp_1",
+      borrower: { 
+        name: "Carlos M.", 
+        score: 720 
+      },
+      amount: 3000,
+      purpose: "Expansão da padaria",
+      interestRate: 2.2,
+      term: 12,
+      riskLevel: "Baixo",
+      funded: 0,
     },
-    amount: loan.amount,
-    purpose: loan.purpose,
-    interestRate: loan.interestRate,
-    term: loan.term,
-    riskLevel: loan.borrower?.score && loan.borrower.score > 700 ? "Baixo" : "Médio",
-    funded: 0, // Sempre 0 para empréstimos pendentes
-  }))
+    {
+      id: "opp_2",
+      borrower: { 
+        name: "Ana L.", 
+        score: 680 
+      },
+      amount: 5000,
+      purpose: "Equipamentos para oficina",
+      interestRate: 2.5,
+      term: 18,
+      riskLevel: "Médio",
+      funded: 0,
+    },
+    {
+      id: "opp_3",
+      borrower: { 
+        name: "Roberto S.", 
+        score: 750 
+      },
+      amount: 2500,
+      purpose: "Capital de giro",
+      interestRate: 1.9,
+      term: 8,
+      riskLevel: "Baixo",
+      funded: 0,
+    }
+  ]
+  
+  // Combinar empréstimos do contexto com oportunidades de exemplo
+  const availableInvestments = [
+    ...contextLoans.map(loan => ({
+      id: loan.id,
+      borrower: { 
+        name: loan.borrower?.name || "Usuário", 
+        score: loan.borrower?.score || 750 
+      },
+      amount: loan.amount,
+      purpose: loan.purpose,
+      interestRate: loan.interestRate,
+      term: loan.term,
+      riskLevel: loan.borrower?.score && loan.borrower.score > 700 ? "Baixo" : "Médio",
+      funded: 0,
+    })),
+    ...exampleOpportunities
+  ]
 
   const myInvestments = [
     {
@@ -226,8 +276,43 @@ export default function InvestorDashboard() {
     }
   }, [])
 
-  const handleInvest = (loanId: string) => {
-    router.push(`/investor/loan-details/${loanId}`)
+  const handleInvest = async (loanId: string) => {
+    setInvestingLoanId(loanId)
+    
+    try {
+      // Para oportunidades de exemplo, redirecionar para uma página de investimento genérica
+      if (loanId.startsWith('opp_')) {
+        // Criar dados mockados para a oportunidade de exemplo
+        const exampleLoan = {
+          id: loanId,
+          amount: loanId === 'opp_1' ? 3000 : loanId === 'opp_2' ? 5000 : 2500,
+          purpose: loanId === 'opp_1' ? 'Expansão da padaria' : loanId === 'opp_2' ? 'Equipamentos para oficina' : 'Capital de giro',
+          interestRate: loanId === 'opp_1' ? 2.2 : loanId === 'opp_2' ? 2.5 : 1.9,
+          term: loanId === 'opp_1' ? 12 : loanId === 'opp_2' ? 18 : 8,
+          status: 'Pendente',
+          progress: 0,
+          borrower: {
+            name: loanId === 'opp_1' ? 'Carlos M.' : loanId === 'opp_2' ? 'Ana L.' : 'Roberto S.',
+            email: loanId === 'opp_1' ? 'carlos@email.com' : loanId === 'opp_2' ? 'ana@email.com' : 'roberto@email.com',
+            score: loanId === 'opp_1' ? 720 : loanId === 'opp_2' ? 680 : 750
+          }
+        }
+        
+        // Salvar temporariamente no localStorage para a página de detalhes acessar
+        const existingLoans = JSON.parse(localStorage.getItem('nexpeer_loans') || '[]')
+        const updatedLoans = [...existingLoans, exampleLoan]
+        localStorage.setItem('nexpeer_loans', JSON.stringify(updatedLoans))
+      }
+      
+      // Simular um pequeno delay para mostrar o loading
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      router.push(`/investor/loan-details/${loanId}`)
+    } catch (error) {
+      console.error('Erro ao processar investimento:', error)
+    } finally {
+      setInvestingLoanId(null)
+    }
   }
 
   const handleLogout = () => {
@@ -354,7 +439,21 @@ export default function InvestorDashboard() {
             </div>
 
             <div className="grid gap-4">
-              {availableInvestments.map((loan) => (
+              {availableInvestments.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-2">Nenhuma oportunidade disponível</h3>
+                    <p className="text-sm text-muted-foreground">
+                      No momento não há empréstimos disponíveis para investimento. 
+                      Novas oportunidades aparecerão aqui quando estiverem disponíveis.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                availableInvestments.map((loan) => (
                 <Card key={loan.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-3">
@@ -406,13 +505,25 @@ export default function InvestorDashboard() {
                         <span>Finalidade:</span>
                         <span className="text-foreground">{loan.purpose}</span>
                       </div>
-                      <Button onClick={() => handleInvest(loan.id)} size="sm">
-                        Investir
+                      <Button 
+                        onClick={() => handleInvest(loan.id)} 
+                        size="sm"
+                        disabled={investingLoanId === loan.id}
+                      >
+                        {investingLoanId === loan.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Carregando...
+                          </>
+                        ) : (
+                          'Investir'
+                        )}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}
