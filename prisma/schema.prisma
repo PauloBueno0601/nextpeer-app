@@ -14,11 +14,15 @@ model Usuario {
   id                String   @id @default(cuid())
   email             String   @unique
   senhaHash         String   @map("senha_hash")
-  cpf               String   @unique
+  cpf               String?  @unique
+  cnpj              String?  @unique
   nome              String
-  sobrenome         String
+  sobrenome         String?
+  razaoSocial       String?  @map("razao_social")
+  nomeFantasia      String?  @map("nome_fantasia")
   telefone          String?
   tipoPerfil        TipoPerfil @map("tipo_perfil")
+  tipoPessoa        TipoPessoa @default(FISICA) @map("tipo_pessoa")
   statusKyc         StatusKyc @default(PENDENTE) @map("status_kyc")
   fotoUsuarioUrl    String?  @map("foto_usuario_url")
   fotoDocumentoUrl  String?  @map("foto_documento_url")
@@ -204,6 +208,11 @@ model Notificacao {
 enum TipoPerfil {
   TOMADOR
   INVESTIDOR
+}
+
+enum TipoPessoa {
+  FISICA
+  JURIDICA
 }
 
 enum StatusKyc {

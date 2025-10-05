@@ -22,9 +22,11 @@ import {
   User,
   LogOut,
   Eye,
+  Building2,
 } from "lucide-react"
+import { LineChart } from "@/components/ui/line-chart"
 
-export default function InvestorDashboard() {
+export default function CompanyDashboard() {
   const [activeTab, setActiveTab] = useState("oportunidades")
   const [loading, setLoading] = useState(true)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -51,9 +53,9 @@ export default function InvestorDashboard() {
     }
   }, [isAuthenticated, authLoading, router])
 
-  // Redirecionar se não for investidor
+  // Redirecionar se não for empresa (apenas se for pessoa física)
   useEffect(() => {
-    if (user && user.profileType !== "INVESTOR") {
+    if (user && user.tipoPessoa === "FISICA") {
       router.push("/borrower/dashboard")
     }
   }, [user, router])
@@ -61,14 +63,14 @@ export default function InvestorDashboard() {
   const dashboardData = {
     user: {
       id: user?.id || "2",
-      name: user?.name || "Investidor",
-      email: user?.email || "investidor@nexpeer.com",
-      profileType: "INVESTOR" as const,
+      name: user?.razaoSocial || user?.nome || "Empresa",
+      email: user?.email || "empresa@nexpeer.com",
+      tipoPessoa: "JURIDICA" as const,
     },
     metrics: {
-      totalAmount: 5000,
-      averageReturn: 450,
-      activeCount: 1,
+      totalAmount: 15000,
+      averageReturn: 1200,
+      activeCount: 3,
     },
     notifications: [
       {
@@ -115,8 +117,8 @@ export default function InvestorDashboard() {
         term: 12,
         monthlyPayment: 506.90,
         totalAmount: 6082.80,
-        startDate: "2025-07-04",
-        endDate: "2026-07-04",
+        startDate: "2025-08-01",
+        endDate: "2026-08-01",
         status: "Ativo",
         progress: 25,
         paidInstallments: 3,
@@ -126,45 +128,19 @@ export default function InvestorDashboard() {
         amount: 5000,
         expectedReturn: 1080,
         currentReturn: 0,
-        nextPayment: "2025-11-15",
+        nextPayment: "2025-11-01",
         nextPaymentAmount: 506.90
       }
     },
-    {
-      id: "2",
-      borrower: {
-        name: "Carlos S.",
-        email: "carlos@nexpeer.com",
-        phone: "(11) 88888-8888",
-        cpf: "987.654.321-00",
-        profession: "Comerciante",
-        monthlyIncome: 12000,
-        employmentStatus: "Empregado",
-        address: "São Paulo, SP",
-        score: 650
-      },
-      loan: {
-        amount: 8000,
-        purpose: "Expansão do negócio",
-        interestRate: 2.1,
-        term: 18,
-        monthlyPayment: 206.50,
-        totalAmount: 3717.00,
-        startDate: "2025-09-01",
-        endDate: "2027-03-01",
-        status: "Ativo",
-        progress: 6,
-        paidInstallments: 1,
-        totalInstallments: 18
-      },
-      investment: {
-        amount: 3000,
-        expectedReturn: 720,
-        currentReturn: 0,
-        nextPayment: "2025-11-01",
-        nextPaymentAmount: 206.50
-      }
-    }
+  ]
+
+  // Dados dos lucros dos últimos 5 meses (considerando outubro 2025)
+  const monthlyProfits = [
+    { month: "Jun", value: 1250, label: "Junho 2025" },
+    { month: "Jul", value: 1680, label: "Julho 2025" },
+    { month: "Ago", value: 1420, label: "Agosto 2025" },
+    { month: "Set", value: 1950, label: "Setembro 2025" },
+    { month: "Out", value: 2200, label: "Outubro 2025" }
   ]
 
   const handleViewDetails = (investment: any) => {
@@ -175,15 +151,14 @@ export default function InvestorDashboard() {
   const handleViewContract = async (loanId: string) => {
     setContractLoading(true)
     try {
-      // Usar dados mockados diretamente
       const mockContract = {
         id: loanId,
         loanId: loanId,
-        investorId: 'u_maria',
+        investorId: user?.id || 'empresa_1',
         borrowerId: 'u_ana',
         hashContrato: `0x${Math.random().toString(16).slice(2, 42)}`,
         simulatedAddress: `0x${Math.random().toString(16).slice(2, 42)}`,
-        pdfUrl: `/api/contracts/${loanId}/pdf?userType=investidor`
+        pdfUrl: `/api/contracts/${loanId}/pdf?userType=empresa`
       }
       
       setContract(mockContract)
@@ -244,11 +219,11 @@ export default function InvestorDashboard() {
               onClick={handleProfileClick}
               className="w-10 h-10 bg-primary/10 rounded-full hover:bg-primary/20"
             >
-              <User className="w-5 h-5 text-primary" />
+              <Building2 className="w-5 h-5 text-primary" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Olá, {dashboardData.user.name}!</h1>
-              <p className="text-sm text-muted-foreground">Bem-vindo ao seu painel de investimentos</p>
+              <h1 className="text-lg font-semibold text-foreground">Olá, {user?.razaoSocial || dashboardData.user.name}!</h1>
+              <p className="text-sm text-muted-foreground">Bem-vindo ao painel de investimentos da empresa</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -270,8 +245,8 @@ export default function InvestorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Saldo em Carteira</p>
-                  <p className="text-lg font-bold text-foreground">R$ 20.000</p>
-                  <p className="text-xs text-green-600">+5.2%</p>
+                  <p className="text-lg font-bold text-foreground">R$ 50.000</p>
+                  <p className="text-xs text-green-600">+8.2%</p>
                 </div>
                 <Wallet className="h-8 w-8 text-primary" />
               </div>
@@ -300,7 +275,7 @@ export default function InvestorDashboard() {
                   <p className="text-lg font-bold text-foreground">
                     R$ {dashboardData.metrics.averageReturn.toLocaleString()}
                   </p>
-                  <p className="text-xs text-green-600">+2.1%</p>
+                  <p className="text-xs text-green-600">+3.2%</p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-primary" />
               </div>
@@ -398,212 +373,95 @@ export default function InvestorDashboard() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">Meus Investimentos</h2>
-                <p className="text-sm text-muted-foreground">Acompanhe seus investimentos ativos</p>
+                <h2 className="text-xl font-semibold text-foreground">Investimentos da Empresa</h2>
+                <p className="text-sm text-muted-foreground">Acompanhe os investimentos ativos da empresa</p>
               </div>
               <Badge variant="default" className="bg-green-100 text-green-700">
                 {dashboardData.metrics.activeCount} ativo(s)
               </Badge>
             </div>
 
-            {/* Investimento 1 - Ana C. */}
-            <Card className="border border-border hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-primary font-semibold text-lg">A</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">Ana C.</h3>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-muted-foreground">Score de Crédito</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">780</Badge>
+            {myInvestments.map((investment) => (
+              <Card key={investment.id} className="border border-border hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="text-primary font-semibold text-lg">{investment.borrower.name[0]}</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-lg">{investment.borrower.name}</h3>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-muted-foreground">Score de Crédito</span>
+                          <Badge variant="secondary" className="bg-green-100 text-green-700">{investment.borrower.score}</Badge>
+                        </div>
                       </div>
                     </div>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700">Ativo</Badge>
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">Ativo</Badge>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Valor Investido</span>
-                    <p className="font-semibold text-foreground text-lg">R$ 5.000</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Retorno Esperado</span>
-                    <p className="font-semibold text-green-600 text-lg">R$ 1.080</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Taxa de Juros</span>
-                    <p className="font-semibold text-foreground">1.8% a.m.</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Prazo</span>
-                    <p className="font-semibold text-foreground">12 meses</p>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progresso do Pagamento</span>
-                    <span className="font-medium">3/12 parcelas (25%)</span>
-                  </div>
-                  <Progress value={25} className="h-3" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Próximo Pagamento:</span>
-                    <span className="font-medium">15 Nov 2024</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor da Parcela:</span>
-                    <span className="font-medium">R$ 506,90</span>
-                  </div>
-                </div>
-
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleViewDetails(myInvestments[0])}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver Detalhes
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleViewContract('1')}
-                    disabled={contractLoading}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Investimento 2 - Carlos S. */}
-            <Card className="border border-border hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-lg">C</span>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Valor Investido</span>
+                      <p className="font-semibold text-foreground text-lg">R$ {investment.investment.amount.toLocaleString()}</p>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">Carlos S.</h3>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-muted-foreground">Score de Crédito</span>
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">650</Badge>
-                      </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Retorno Esperado</span>
+                      <p className="font-semibold text-green-600 text-lg">R$ {investment.investment.expectedReturn.toLocaleString()}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Taxa de Juros</span>
+                      <p className="font-semibold text-foreground">{investment.loan.interestRate}% a.m.</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Prazo</span>
+                      <p className="font-semibold text-foreground">{investment.loan.term} meses</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">Ativo</Badge>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Valor Investido</span>
-                    <p className="font-semibold text-foreground text-lg">R$ 3.000</p>
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Progresso do Pagamento</span>
+                      <span className="font-medium">{investment.loan.paidInstallments}/{investment.loan.totalInstallments} parcelas ({investment.loan.progress}%)</span>
+                    </div>
+                    <Progress value={investment.loan.progress} className="h-3" />
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Retorno Esperado</span>
-                    <p className="font-semibold text-green-600 text-lg">R$ 720</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Taxa de Juros</span>
-                    <p className="font-semibold text-foreground">2.1% a.m.</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Prazo</span>
-                    <p className="font-semibold text-foreground">18 meses</p>
-                  </div>
-                </div>
 
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progresso do Pagamento</span>
-                    <span className="font-medium">1/18 parcelas (6%)</span>
-                  </div>
-                  <Progress value={6} className="h-3" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Próximo Pagamento:</span>
-                    <span className="font-medium">20 Nov 2024</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor da Parcela:</span>
-                    <span className="font-medium">R$ 206,50</span>
-                  </div>
-                </div>
-
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleViewDetails(myInvestments[1])}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver Detalhes
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleViewContract('1')}
-                    disabled={contractLoading}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Resumo dos Investimentos */}
-            <Card className="bg-muted/30">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Resumo dos Investimentos</h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Investido:</span>
-                      <span className="font-semibold text-foreground">R$ 8.000</span>
+                      <span className="text-muted-foreground">Próximo Pagamento:</span>
+                      <span className="font-medium">{new Date(investment.investment.nextPayment).toLocaleDateString('pt-BR')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Retorno Esperado:</span>
-                      <span className="font-semibold text-green-600">R$ 1.800</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">ROI Médio:</span>
-                      <span className="font-semibold text-foreground">22.5%</span>
+                      <span className="text-muted-foreground">Valor da Parcela:</span>
+                      <span className="font-medium">R$ {investment.investment.nextPaymentAmount.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Investimentos Ativos:</span>
-                      <span className="font-semibold text-foreground">2</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Próximo Recebimento:</span>
-                      <span className="font-semibold text-primary">15 Nov</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status Geral:</span>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">Em Dia</Badge>
-                    </div>
+
+                  <div className="flex space-x-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleViewDetails(investment)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Detalhes
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleViewContract(investment.id)}
+                      disabled={contractLoading}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      {contractLoading ? 'Carregando...' : 'Ver Contrato'}
+                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
 
@@ -628,114 +486,17 @@ export default function InvestorDashboard() {
 
         {activeTab === "analises" && (
           <div className="space-y-6">
-            {/* Gráfico de Lucro dos Últimos 5 Meses */}
+            {/* Gráfico de Lucros dos Últimos 5 Meses */}
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Lucro dos Últimos 5 Meses</h3>
-                    <p className="text-sm text-muted-foreground">Evolução do seu retorno mensal (Jun - Out 2024)</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">+R$ 2.020</div>
-                    <div className="text-sm text-muted-foreground">Total acumulado</div>
-                  </div>
-                </div>
-                
-                {/* Gráfico de Linhas */}
-                <div className="relative h-64 bg-muted/20 rounded-lg p-4">
-                  <svg className="w-full h-full" viewBox="0 0 400 200">
-                    {/* Grid lines */}
-                    <defs>
-                      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3"/>
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-                    
-                    {/* Data points and line */}
-                    {(() => {
-                      const data = [
-                        { month: "Jun", profit: 320, x: 40, y: 160 },
-                        { month: "Jul", profit: 380, x: 120, y: 140 },
-                        { month: "Ago", profit: 420, x: 200, y: 120 },
-                        { month: "Set", profit: 380, x: 280, y: 140 },
-                        { month: "Out", profit: 520, x: 360, y: 80 }
-                      ];
-                      
-                      const points = data.map(d => `${d.x},${d.y}`).join(' ');
-                      
-                      return (
-                        <>
-                          {/* Line */}
-                          <polyline
-                            points={points}
-                            fill="none"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          
-                          {/* Data points */}
-                          {data.map((point, index) => (
-                            <g key={index}>
-                              <circle
-                                cx={point.x}
-                                cy={point.y}
-                                r="6"
-                                fill="hsl(var(--primary))"
-                                stroke="hsl(var(--background))"
-                                strokeWidth="2"
-                              />
-                              <text
-                                x={point.x}
-                                y={point.y - 15}
-                                textAnchor="middle"
-                                className="text-xs font-semibold fill-foreground"
-                              >
-                                R$ {point.profit}
-                              </text>
-                              <text
-                                x={point.x}
-                                y={point.y + 25}
-                                textAnchor="middle"
-                                className="text-xs fill-muted-foreground"
-                              >
-                                {point.month}
-                              </text>
-                            </g>
-                          ))}
-                        </>
-                      );
-                    })()}
-                  </svg>
-                  
-                  {/* Y-axis labels */}
-                  <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-2">
-                    <span className="text-xs text-muted-foreground">R$ 600</span>
-                    <span className="text-xs text-muted-foreground">R$ 450</span>
-                    <span className="text-xs text-muted-foreground">R$ 300</span>
-                    <span className="text-xs text-muted-foreground">R$ 150</span>
-                    <span className="text-xs text-muted-foreground">R$ 0</span>
-                  </div>
-                </div>
-                
-                {/* Estatísticas */}
-                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-foreground">R$ 520</div>
-                    <div className="text-xs text-muted-foreground">Maior lucro</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-foreground">R$ 320</div>
-                    <div className="text-xs text-muted-foreground">Menor lucro</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-green-600">+62.5%</div>
-                    <div className="text-xs text-muted-foreground">Crescimento</div>
-                  </div>
-                </div>
+                <LineChart
+                  data={monthlyProfits}
+                  title="Lucros Recebidos - Últimos 5 Meses"
+                  subtitle="Evolução dos retornos mensais da empresa (Jun - Out 2025)"
+                  height={300}
+                  showGrid={true}
+                  showValues={true}
+                />
               </CardContent>
             </Card>
 
@@ -747,7 +508,7 @@ export default function InvestorDashboard() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">ROI Médio</span>
-                      <span className="font-semibold text-foreground">8.2%</span>
+                      <span className="font-semibold text-foreground">12.5%</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Investimentos Ativos</span>
@@ -765,7 +526,7 @@ export default function InvestorDashboard() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Retorno Total</span>
-                      <span className="font-semibold text-green-600">R$ 2.020</span>
+                      <span className="font-semibold text-green-600">R$ 1.875</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Próximo Pagamento</span>
@@ -775,9 +536,38 @@ export default function InvestorDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Estatísticas Adicionais */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600 mb-2">
+                    R$ {monthlyProfits.reduce((sum, month) => sum + month.value, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Total em 5 meses</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-primary mb-2">
+                    R$ {Math.round(monthlyProfits.reduce((sum, month) => sum + month.value, 0) / monthlyProfits.length).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Média mensal</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600 mb-2">
+                    +{Math.round(((monthlyProfits[monthlyProfits.length - 1].value - monthlyProfits[0].value) / monthlyProfits[0].value) * 100)}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Crescimento</div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
-
       </div>
 
       {/* Bottom Tab Bar */}
@@ -825,7 +615,6 @@ export default function InvestorDashboard() {
       {showDetailsModal && selectedInvestment && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-background border border-border rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-semibold text-foreground">Detalhes do Investimento</h2>
               <button
@@ -838,9 +627,7 @@ export default function InvestorDashboard() {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-              {/* Informações do Tomador */}
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4">Informações do Tomador</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -876,76 +663,8 @@ export default function InvestorDashboard() {
                   </div>
                 </div>
               </div>
-
-              {/* Informações do Empréstimo */}
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Informações do Empréstimo</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Valor do Empréstimo:</span>
-                      <p className="font-semibold text-foreground text-lg">R$ {selectedInvestment.loan.amount.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Finalidade:</span>
-                      <p className="font-medium text-foreground">{selectedInvestment.loan.purpose}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Taxa de Juros:</span>
-                      <p className="font-medium text-foreground">{selectedInvestment.loan.interestRate}% a.m.</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Prazo:</span>
-                      <p className="font-medium text-foreground">{selectedInvestment.loan.term} meses</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Parcela Mensal:</span>
-                      <p className="font-semibold text-foreground">R$ {selectedInvestment.loan.monthlyPayment.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Valor Total:</span>
-                      <p className="font-semibold text-foreground">R$ {selectedInvestment.loan.totalAmount.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Data de Início:</span>
-                      <p className="font-medium text-foreground">{new Date(selectedInvestment.loan.startDate).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Data de Vencimento:</span>
-                      <p className="font-medium text-foreground">{new Date(selectedInvestment.loan.endDate).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progresso do Pagamento */}
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Progresso do Pagamento</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Parcelas Pagas</span>
-                      <span className="font-medium">{selectedInvestment.loan.paidInstallments}/{selectedInvestment.loan.totalInstallments}</span>
-                    </div>
-                    <Progress value={selectedInvestment.loan.progress} className="h-3" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Próximo Pagamento:</span>
-                      <p className="font-medium text-foreground">{new Date(selectedInvestment.investment.nextPayment).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Valor da Próxima Parcela:</span>
-                      <p className="font-medium text-foreground">R$ {selectedInvestment.investment.nextPaymentAmount.toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-6 border-t border-border bg-muted/30">
               <div className="flex space-x-3">
                 <Button 
@@ -995,19 +714,18 @@ export default function InvestorDashboard() {
         </div>
       )}
 
-      {/* Popup de Perfil do Usuário */}
+      {/* Popup de Perfil da Empresa */}
       {showProfilePopup && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-background border border-border rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-primary" />
+                  <Building2 className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Perfil do Investidor</h2>
-                  <p className="text-sm text-muted-foreground">Dados da sua conta</p>
+                  <h2 className="text-lg font-semibold text-foreground">{user?.razaoSocial || "Empresa"}</h2>
+                  <p className="text-sm text-muted-foreground">Dados da conta empresarial</p>
                 </div>
               </div>
               <button
@@ -1020,40 +738,37 @@ export default function InvestorDashboard() {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6 max-h-[60vh] overflow-y-auto">
               <div className="space-y-6">
-                {/* Informações Pessoais */}
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Informações Pessoais</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Informações da Empresa</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm text-muted-foreground">Nome Completo</label>
-                      <p className="font-medium text-foreground">{user?.name || "Investidor"}</p>
+                      <label className="text-sm text-muted-foreground">Razão Social</label>
+                      <p className="font-semibold text-foreground text-lg">{user?.razaoSocial || "Empresa Exemplo Ltda"}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">Nome Fantasia</label>
+                      <p className="font-medium text-foreground">{user?.nomeFantasia || "Empresa Exemplo"}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">CNPJ</label>
+                      <p className="font-medium text-foreground">{user?.cnpj || "12.345.678/0001-90"}</p>
                     </div>
                     <div>
                       <label className="text-sm text-muted-foreground">Email</label>
-                      <p className="font-medium text-foreground">{user?.email || "investidor@nexpeer.com"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground">CPF</label>
-                      <p className="font-medium text-foreground">{user?.cpf || "123.456.789-00"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground">Telefone</label>
-                      <p className="font-medium text-foreground">{user?.phone || "(11) 99999-9999"}</p>
+                      <p className="font-medium text-foreground">{user?.email || "empresa@nexpeer.com"}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Status da Conta */}
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-4">Status da Conta</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Tipo de Perfil</span>
                       <Badge className="bg-primary/10 text-primary">
-                        Investidor
+                        Empresa
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1063,39 +778,11 @@ export default function InvestorDashboard() {
                         Ativo
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Data de Cadastro</span>
-                      <span className="font-medium text-foreground">15/03/2024</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Estatísticas de Investimento */}
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Estatísticas de Investimento</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">R$ 8.000</div>
-                      <div className="text-sm text-muted-foreground">Total Investido</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">2</div>
-                      <div className="text-sm text-muted-foreground">Investimentos Ativos</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">R$ 720</div>
-                      <div className="text-sm text-muted-foreground">Retorno Esperado</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-foreground">9.0%</div>
-                      <div className="text-sm text-muted-foreground">Taxa Média</div>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-6 border-t border-border bg-muted/30">
               <div className="flex flex-col space-y-3">
                 {/* Botão Sair - Mais proeminente */}
@@ -1119,17 +806,6 @@ export default function InvestorDashboard() {
                     onClick={() => setShowProfilePopup(false)}
                   >
                     Fechar
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setShowProfilePopup(false)
-                      router.push("/profile")
-                    }}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Editar Perfil
                   </Button>
                 </div>
               </div>

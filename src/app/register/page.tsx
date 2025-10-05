@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, User, Mail, Lock, Phone, CreditCard } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ArrowLeft, User, Mail, Lock, Phone, CreditCard, Building2, FileText } from "lucide-react"
 import Link from "next/link"
 
 export default function RegisterPage() {
@@ -18,16 +19,19 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     cpf: "",
-    phone: ""
+    phone: "",
+    aceitarTermos: false,
+    aceitarPrivacidade: false,
+    aceitarComunicacoes: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
     
     // Clear error when user starts typing
@@ -37,6 +41,13 @@ export default function RegisterPage() {
         [name]: ""
       }))
     }
+  }
+
+  const handleCheckboxChange = (field: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked
+    }))
   }
 
   const validateForm = () => {
@@ -78,6 +89,14 @@ export default function RegisterPage() {
       newErrors.phone = "Telefone é obrigatório"
     } else if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(formData.phone)) {
       newErrors.phone = "Telefone deve estar no formato (00) 00000-0000"
+    }
+
+    if (!formData.aceitarTermos) {
+      newErrors.aceitarTermos = "Você deve aceitar os termos de uso"
+    }
+
+    if (!formData.aceitarPrivacidade) {
+      newErrors.aceitarPrivacidade = "Você deve aceitar a política de privacidade"
     }
 
     setErrors(newErrors)
@@ -337,6 +356,58 @@ export default function RegisterPage() {
                 )}
               </div>
 
+              {/* Termos e Condições */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 mb-4">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold text-foreground">Termos e Condições</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="aceitarTermos"
+                      checked={formData.aceitarTermos}
+                      onCheckedChange={(checked) => handleCheckboxChange("aceitarTermos", checked as boolean)}
+                      className="mt-1"
+                    />
+                    <Label htmlFor="aceitarTermos" className="text-sm text-foreground">
+                      Aceito os <a href="#" className="text-primary hover:underline">Termos de Uso</a> da plataforma *
+                    </Label>
+                  </div>
+                  {errors.aceitarTermos && (
+                    <p className="text-red-500 text-xs">{errors.aceitarTermos}</p>
+                  )}
+                  
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="aceitarPrivacidade"
+                      checked={formData.aceitarPrivacidade}
+                      onCheckedChange={(checked) => handleCheckboxChange("aceitarPrivacidade", checked as boolean)}
+                      className="mt-1"
+                    />
+                    <Label htmlFor="aceitarPrivacidade" className="text-sm text-foreground">
+                      Aceito a <a href="#" className="text-primary hover:underline">Política de Privacidade</a> *
+                    </Label>
+                  </div>
+                  {errors.aceitarPrivacidade && (
+                    <p className="text-red-500 text-xs">{errors.aceitarPrivacidade}</p>
+                  )}
+                  
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="aceitarComunicacoes"
+                      checked={formData.aceitarComunicacoes}
+                      onCheckedChange={(checked) => handleCheckboxChange("aceitarComunicacoes", checked as boolean)}
+                      className="mt-1"
+                    />
+                    <Label htmlFor="aceitarComunicacoes" className="text-sm text-foreground">
+                      Desejo receber comunicações sobre investimentos e novidades da plataforma
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
               {/* Submit button */}
               <Button
                 type="submit"
@@ -347,6 +418,26 @@ export default function RegisterPage() {
               >
                 {loading ? "Processando..." : "Continuar"}
               </Button>
+
+              {/* Divider */}
+              <div className="flex items-center space-x-4 my-6">
+                <div className="flex-1 h-px bg-border"></div>
+                <span className="text-xs text-muted-foreground">ou</span>
+                <div className="flex-1 h-px bg-border"></div>
+              </div>
+
+              {/* Company signup button */}
+              <Link href="/signup/company" className="block">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="w-full h-12 text-base font-semibold border-border hover:bg-muted transition-all duration-300"
+                >
+                  <Building2 className="w-5 h-5 mr-2" />
+                  Cadastrar Empresa
+                </Button>
+              </Link>
             </form>
           </CardContent>
         </Card>
