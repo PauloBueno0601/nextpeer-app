@@ -589,10 +589,9 @@ Exemplo Prático:
 ##  Contato e Suporte
 
 ### Links Úteis
-- **Repositório**: [GitHub Link]
-- **Deploy**: [Vercel Link]
-- **Apresentação**: [Slides Link]
-- **Demo**: [Demo Link]
+* **Repositório no GitHub:** https://github.com/PauloBueno0601/nextpeer-app
+* **Apresentação de Slides:** [Canva](https://www.canva.com/design/DAG05XMxLCk/uyqRZEqmb42vLjTyc9zbRQ/edit?utm_content=DAG05XMxLCk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+- **Deploy**: https://nextpeer-app.vercel.app/
 
 ### Suporte Técnico
 - **Chatbot Ello**: Disponível 24/7 na plataforma
