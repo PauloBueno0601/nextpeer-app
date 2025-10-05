@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       email: body.email,
       profileType: "BORROWER",
+      personType: "FISICA", // Adicionando propriedade obrigatória
       cpf: body.cpf,
       phone: body.phone,
       birthDate: body.birthDate,

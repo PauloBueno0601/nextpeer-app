@@ -55,7 +55,7 @@ export default function CompanyDashboard() {
 
   // Redirecionar se não for empresa (apenas se for pessoa física)
   useEffect(() => {
-    if (user && user.tipoPessoa === "FISICA") {
+    if (user && user.personType === "FISICA") {
       router.push("/borrower/dashboard")
     }
   }, [user, router])
@@ -63,7 +63,7 @@ export default function CompanyDashboard() {
   const dashboardData = {
     user: {
       id: user?.id || "2",
-      name: user?.razaoSocial || user?.nome || "Empresa",
+      name: user?.razaoSocial || user?.name || "Empresa",
       email: user?.email || "empresa@nexpeer.com",
       tipoPessoa: "JURIDICA" as const,
     },

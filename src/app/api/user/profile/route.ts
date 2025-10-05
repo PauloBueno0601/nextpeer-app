@@ -17,8 +17,7 @@ export async function GET(request: NextRequest) {
     const client = new Client({
       connectionString: "postgresql://postgres.brkpqghnsaydripywndf:bbgnexpeer@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
       ssl: { rejectUnauthorized: false },
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000
+      connectionTimeoutMillis: 10000
     })
     await client.connect()
 

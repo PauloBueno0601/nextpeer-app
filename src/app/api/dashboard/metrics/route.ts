@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       const totalSolicitado = emprestimos.reduce((sum, emp) => sum + Number(emp.valorSolicitado), 0)
       const totalAprovado = emprestimos.reduce((sum, emp) => sum + Number(emp.valorAprovado || 0), 0)
       const ativosCount = emprestimos.filter(emp => 
-        ['FINANCIADO', 'ATIVO'].includes(emp.status)
+        emp.status && ['FINANCIADO', 'ATIVO'].includes(emp.status)
       ).length
       
       const scoreCredito = perfilTomador?.scoreCredito || 0

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar se CNPJ já existe
     const existingCNPJ = await prisma.usuario.findUnique({
-      where: { cnpj }
+      where: { cnpj: cnpj }
     })
 
     if (existingCNPJ) {

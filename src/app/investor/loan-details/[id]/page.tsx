@@ -53,7 +53,7 @@ export default function LoanDetailsPage() {
       }
       
       // Se não encontrou, verificar se é uma oportunidade de exemplo
-      if (params.id.startsWith('opp_')) {
+      if (typeof params.id === 'string' && params.id.startsWith('opp_')) {
         const exampleLoan = {
           id: params.id,
           amount: params.id === 'opp_1' ? 3000 : params.id === 'opp_2' ? 5000 : 2500,
