@@ -1,6 +1,7 @@
 # NexPeer - Plataforma de Empréstimos P2P
 
 Uma plataforma de empréstimos peer-to-peer desenvolvida com Next.js 14, TypeScript e Prisma.
+Acesse a aplicação através do link: http://nextpeer-app.vercel.app
 
 ## Tecnologias
 
@@ -90,3 +91,6 @@ Para fazer deploy em produção:
 ##  Licença
 
 Este projeto está sob a licença MIT.
+
+## Documentação
+Para acessar a documentação completa da aplicação, acesse o arquivo DOCUMENTACAO_HACKATHON.md, localizado dentro na pasta ```docs``` deste repositório.

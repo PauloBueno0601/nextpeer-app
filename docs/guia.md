@@ -41,7 +41,7 @@ Construímos a plataforma sobre pilares que garantem segurança, justiça e aces
 
 Para facilitar a visualização, simplificamos o acesso aos perfis de teste.
 
-1.  **Acesse a Plataforma:** `[COLOQUE O LINK DO DEPLOY NA VERCEL AQUI]`
+1.  **Acesse a Plataforma:** http://nextpeer-app.vercel.app
 2.  **Escolha um Perfil na Tela de Login:** Na própria tela de login, **clique em um dos perfis de teste pré-configurados**. O login será feito automaticamente.
 3.  **Explore as Funcionalidades:** Uma vez no dashboard, sinta-se à vontade para explorar a jornada completa do usuário através da barra de navegação, **desde a solicitação de um novo empréstimo até a análise de perfil com nosso score dinâmico.**
 4.  **Interaja com o Chatbot "Ello":** Clique no ícone de chat no canto da tela e explore os tópicos.
@@ -59,5 +59,5 @@ Para facilitar a visualização, simplificamos o acesso aos perfis de teste.
 
 ## 🔗 Links Úteis
 
-* **Repositório no GitHub:** `[COLOQUE O LINK DO SEU GITHUB AQUI]`
-* **Apresentação de Slides:** `[COLOQUE O LINK PARA OS SLIDES AQUI]`
+* **Repositório no GitHub:** https://github.com/PauloBueno0601/nextpeer-app
+* **Apresentação de Slides:** [Canva](https://www.canva.com/design/DAG05XMxLCk/uyqRZEqmb42vLjTyc9zbRQ/edit?utm_content=DAG05XMxLCk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
