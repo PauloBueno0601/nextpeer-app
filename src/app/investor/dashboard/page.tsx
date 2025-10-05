@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useLoans } from "@/contexts/LoansContext"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -30,8 +31,20 @@ export default function InvestorDashboard() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedInvestment, setSelectedInvestment] = useState<any>(null)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
+  const [contractOpen, setContractOpen] = useState(false)
+  const [contractLoading, setContractLoading] = useState(false)
+  const [contract, setContract] = useState<null | {
+    id: string
+    loanId: string
+    investorId: string
+    borrowerId: string
+    hashContrato: string
+    simulatedAddress: string
+    pdfUrl: string
+  }>(null)
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const { getAvailableLoans } = useLoans()
 
   // Proteção de rotas
   useEffect(() => {
@@ -55,9 +68,9 @@ export default function InvestorDashboard() {
       profileType: "INVESTOR" as const,
     },
     metrics: {
-      totalAmount: 5000,
+      totalAmount: 8000,
       averageReturn: 450,
-      activeCount: 1,
+      activeCount: 2,
     },
     notifications: [
       {
@@ -70,18 +83,20 @@ export default function InvestorDashboard() {
     ],
   }
 
-  const availableInvestments = [
-    {
-      id: "2",
-      borrower: { name: "Maria S.", score: 720 },
-      amount: 8000,
-      purpose: "Capital de giro",
-      interestRate: 2.1,
-      term: 18,
-      riskLevel: "Médio",
-      funded: 60,
+  // Obter empréstimos disponíveis do contexto
+  const availableInvestments = getAvailableLoans().map(loan => ({
+    id: loan.id,
+    borrower: { 
+      name: loan.borrower?.name || "Usuário", 
+      score: loan.borrower?.score || 750 
     },
-  ]
+    amount: loan.amount,
+    purpose: loan.purpose,
+    interestRate: loan.interestRate,
+    term: loan.term,
+    riskLevel: loan.borrower?.score && loan.borrower.score > 700 ? "Baixo" : "Médio",
+    funded: 0, // Sempre 0 para empréstimos pendentes
+  }))
 
   const myInvestments = [
     {
@@ -161,6 +176,29 @@ export default function InvestorDashboard() {
     setShowDetailsModal(true)
   }
 
+  const handleViewContract = async (loanId: string) => {
+    setContractLoading(true)
+    try {
+      // Usar dados mockados diretamente
+      const mockContract = {
+        id: loanId,
+        loanId: loanId,
+        investorId: 'u_maria',
+        borrowerId: 'u_ana',
+        hashContrato: `0x${Math.random().toString(16).slice(2, 42)}`,
+        simulatedAddress: `0x${Math.random().toString(16).slice(2, 42)}`,
+        pdfUrl: `/api/contracts/${loanId}/pdf?userType=investidor`
+      }
+      
+      setContract(mockContract)
+      setContractOpen(true)
+    } catch (e) {
+      console.error('Erro ao carregar contrato:', e)
+    } finally {
+      setContractLoading(false)
+    }
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false)
@@ -169,12 +207,31 @@ export default function InvestorDashboard() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Verificar se houve investimento bem-sucedido
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('invested') === 'true') {
+      // Adicionar notificação de investimento bem-sucedido
+      const newNotification = {
+        id: Date.now().toString(),
+        title: "Investimento Realizado",
+        message: "Seu investimento foi processado com sucesso!",
+        read: false,
+        createdAt: new Date(),
+      }
+      dashboardData.notifications.unshift(newNotification)
+      
+      // Limpar parâmetro da URL
+      window.history.replaceState({}, '', '/investor/dashboard')
+    }
+  }, [])
+
   const handleInvest = (loanId: string) => {
     router.push(`/investor/loan-details/${loanId}`)
   }
 
   const handleLogout = () => {
-    router.push("/")
+    router.push("/login")
   }
 
   const handleProfileClick = () => {
@@ -199,7 +256,7 @@ export default function InvestorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
@@ -439,9 +496,15 @@ export default function InvestorDashboard() {
                     <Eye className="w-4 h-4 mr-2" />
                     Ver Detalhes
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewContract('1')}
+                    disabled={contractLoading}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
-                    Ver Contrato
+                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
                   </Button>
                 </div>
               </CardContent>
@@ -514,9 +577,15 @@ export default function InvestorDashboard() {
                     <Eye className="w-4 h-4 mr-2" />
                     Ver Detalhes
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewContract('1')}
+                    disabled={contractLoading}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
-                    Ver Contrato
+                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
                   </Button>
                 </div>
               </CardContent>
@@ -909,12 +978,42 @@ export default function InvestorDashboard() {
                 >
                   Fechar
                 </Button>
-                <Button className="flex-1">
+                <Button 
+                  className="flex-1"
+                  onClick={() => handleViewContract('emp_1')}
+                  disabled={contractLoading}
+                >
                   <FileText className="w-4 h-4 mr-2" />
-                  Ver Contrato Completo
+                  {contractLoading ? 'Carregando...' : 'Ver Contrato Completo'}
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do Contrato */}
+      {contractOpen && contract && (
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato (simulado)</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex justify-between"><span className="text-muted-foreground">Empréstimo</span><span className="text-foreground">{contract.loanId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Investidor</span><span className="text-foreground">{contract.investorId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Tomador</span><span className="text-foreground">{contract.borrowerId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contract.hashContrato}</span></div>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contract.pdfUrl} className="w-full h-full" title="Contrato PDF" />
+            </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contract.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setContractOpen(false)}>Fechar</Button>
           </div>
         </div>
       )}
@@ -1021,36 +1120,41 @@ export default function InvestorDashboard() {
 
             {/* Modal Footer */}
             <div className="p-6 border-t border-border bg-muted/30">
-              <div className="flex space-x-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => setShowProfilePopup(false)}
-                >
-                  Fechar
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setShowProfilePopup(false)
-                    router.push("/profile")
-                  }}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Editar Perfil
-                </Button>
+              <div className="flex flex-col space-y-3">
+                {/* Botão Sair - Mais proeminente */}
                 <Button 
                   variant="destructive"
-                  className="flex-1"
+                  className="w-full"
                   onClick={() => {
                     setShowProfilePopup(false)
                     router.push("/login")
                   }}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Sair
+                  Sair da Conta
                 </Button>
+                
+                {/* Outros botões */}
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setShowProfilePopup(false)}
+                  >
+                    Fechar
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowProfilePopup(false)
+                      router.push("/profile")
+                    }}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Editar Perfil
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

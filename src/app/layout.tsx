@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ChatBot from "@/components/ChatBot";
+import { LoansProvider } from "@/contexts/LoansContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -11,8 +12,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "NexPeer - P2P Lending",
   description: "A camada de confiança para o crédito descentralizado",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  themeColor: "#34D399",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.svg",
@@ -29,6 +28,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#34D399",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,20 +44,16 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#34D399" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="NexPeer" />
-        <meta name="format-detection" content="telephone=no" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body
         className={`${inter.variable} antialiased`}
       >
-        {children}
-        <ChatBot />
+        <LoansProvider>
+          {children}
+          <ChatBot />
+        </LoansProvider>
       </body>
     </html>
   );

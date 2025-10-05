@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Plus, Eye, Download } from "lucide-react"
+import { ArrowLeft, Plus, Eye, Download, FileText } from "lucide-react"
 
 export default function MyLoansPage() {
   const [loading, setLoading] = useState(true)
@@ -49,108 +49,109 @@ export default function MyLoansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="w-10 h-10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Meus Empréstimos</h1>
-              <p className="text-sm text-muted-foreground">Gerencie seus empréstimos ativos</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header com gradiente moderno */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg">
+        <div className="px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.back()}
+                className="w-10 h-10 text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Meus Empréstimos</h1>
+                <p className="text-blue-100 mt-1">Gerencie seus empréstimos ativos</p>
+              </div>
             </div>
+            <Button
+              onClick={() => router.push("/borrower/request-loan")}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Empréstimo
+            </Button>
           </div>
-          <Button
-            onClick={() => router.push("/borrower/request-loan")}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Empréstimo
-          </Button>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         {loans.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum empréstimo encontrado</h3>
-              <p className="text-muted-foreground mb-4">
-                Você ainda não possui empréstimos. Que tal solicitar o seu primeiro?
-              </p>
-              <Button
-                onClick={() => router.push("/borrower/request-loan")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Solicitar Empréstimo
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex justify-center">
+            <Card className="max-w-md w-full shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-12 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-10 h-10 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Nenhum empréstimo encontrado</h3>
+                <p className="text-gray-600 mb-8">Você ainda não possui empréstimos ativos. Que tal solicitar seu primeiro empréstimo?</p>
+                <Button 
+                  onClick={() => router.push("/borrower/request-loan")} 
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Solicitar Empréstimo
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {loans.map((loan) => (
-              <Card key={loan.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">R$ {loan.amount.toLocaleString()}</CardTitle>
-                    <Badge 
-                      variant={loan.status === "active" ? "default" : "secondary"}
-                      className={loan.status === "active" ? "bg-green-100 text-green-800" : ""}
-                    >
+              <Card key={loan.id} className="shadow-xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+                <CardContent className="p-8">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">R$ {loan.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                      <p className="text-gray-600 mt-1">{loan.purpose}</p>
+                    </div>
+                    <Badge className={`px-4 py-2 text-sm font-medium ${
+                      loan.status === "active" 
+                        ? "bg-green-100 text-green-800 border-green-200" 
+                        : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                    }`}>
                       {loan.status === "active" ? "Ativo" : "Pendente"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{loan.purpose}</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progresso do Financiamento</span>
-                      <span className="text-foreground font-medium">{loan.progress}%</span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-1">Taxa de Juros</p>
+                      <p className="text-xl font-bold text-blue-600">{loan.interestRate}% a.m.</p>
                     </div>
-                    <Progress value={loan.progress} />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>R$ {loan.fundedAmount.toLocaleString()}</span>
-                      <span>R$ {loan.totalAmount.toLocaleString()}</span>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-1">Prazo</p>
+                      <p className="text-xl font-bold text-green-600">{loan.term} meses</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-1">Data de Criação</p>
+                      <p className="text-xl font-bold text-purple-600">{loan.createdAt.toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Prazo:</span>
-                      <span className="ml-2 text-foreground font-medium">{loan.term} meses</span>
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-gray-700">Progresso de Financiamento</span>
+                      <span className="text-sm font-bold text-blue-600">{loan.progress}%</span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Taxa:</span>
-                      <span className="ml-2 text-foreground font-medium">{loan.interestRate}% a.m.</span>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-500" 
+                        style={{ width: `${loan.progress}%` }}
+                      ></div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Solicitado em:</span>
-                      <span className="ml-2 text-foreground font-medium">
-                        {loan.createdAt.toLocaleDateString("pt-BR")}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Status:</span>
-                      <span className="ml-2 text-foreground font-medium">
-                        {loan.status === "active" ? "Em andamento" : "Aguardando"}
-                      </span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">R$ {loan.fundedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} financiado</span>
+                      <span className="text-gray-600">R$ {loan.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1">
+                  <div className="flex gap-3 pt-6 border-t border-gray-200">
+                    <Button variant="outline" size="sm" className="flex-1 border-gray-300 hover:bg-gray-50">
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Detalhes
                     </Button>
@@ -158,27 +159,27 @@ export default function MyLoansPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                         onClick={async () => {
                           try {
                             const resp = await fetch(`/api/contracts/${loan.id}`)
                             const data = await resp.json()
                             if (data?.success && data.contract) {
                               setContractData({
-                                pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf`,
+                                pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf?userType=tomador`,
                                 hashContrato: data.contract.hashContrato ?? '—',
                                 simulatedAddress: data.contract.simulatedAddress ?? '—'
                               })
                             } else {
                               setContractData({
-                                pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+                                pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
                                 hashContrato: '—',
                                 simulatedAddress: '—'
                               })
                             }
                           } catch (_) {
                             setContractData({
-                              pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+                              pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
                               hashContrato: '—',
                               simulatedAddress: '—'
                             })
@@ -198,24 +199,24 @@ export default function MyLoansPage() {
         )}
       </div>
       {showContractModal && contractData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contractData.hashContrato}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all text-xs">{contractData.simulatedAddress}</span></div>
             </div>
-            <div className="p-6 space-y-4 text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contractData.hashContrato}</span></div>
-                <div className="flex justify-between md:col-span-2"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all">{contractData.simulatedAddress}</span></div>
-              </div>
-              <div className="h-[70vh] border border-border rounded overflow-hidden">
-                <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
-              </div>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
             </div>
-            <div className="p-6 border-t border-border flex justify-between">
-              <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
-              <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
-            </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
           </div>
         </div>
       )}

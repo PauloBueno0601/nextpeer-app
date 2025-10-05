@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,238 +8,174 @@ datasource db {
 }
 
 model Usuario {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  senhaHash         String   @map("senha_hash")
-  cpf               String   @unique
-  nome              String
-  sobrenome         String
-  telefone          String?
-  tipoPerfil        TipoPerfil @map("tipo_perfil")
-  statusKyc         StatusKyc @default(PENDENTE) @map("status_kyc")
-  fotoUsuarioUrl    String?  @map("foto_usuario_url")
-  fotoDocumentoUrl  String?  @map("foto_documento_url")
-  criadoEm          DateTime @default(now()) @map("criado_em")
-  atualizadoEm      DateTime @updatedAt @map("atualizado_em")
-
-  // Relacionamentos
-  perfilTomador     PerfilTomador?
-  perfilInvestidor  PerfilInvestidor?
-  emprestimos       Emprestimo[]
-  investimentos     Investimento[]
-  notificacoes      Notificacao[]
-  logsAcoes         LogAcao[]
-  historicoScores   HistoricoScore[]
-  contratosInvestidor ContratoCcb[] @relation("ContratoInvestidor")
-  contratosTomador   ContratoCcb[] @relation("ContratoTomador")
-  repasses          Repasse[]
+  id                  String            @id @default(cuid()) @db.VarChar(36)
+  email               String            @unique @db.VarChar(255)
+  senhaHash           String            @map("senha_hash") @db.VarChar(255)
+  cpf                 String            @unique @db.Char(11)
+  nome                String            @db.VarChar(100)
+  sobrenome           String            @db.VarChar(150)
+  telefone            String?           @db.VarChar(20)
+  tipoPerfil          String            @map("tipo_perfil") @db.VarChar(20)
+  statusKyc           String?           @default("pendente") @map("status_kyc") @db.VarChar(20)
+  foto_usuario_url    String?           @db.VarChar(500)
+  foto_documento_url  String?           @db.VarChar(500)
+  criadoEm            DateTime?         @map("criado_em") @db.Timestamp(6)
+  atualizadoEm        DateTime?         @updatedAt @map("atualizado_em") @db.Timestamp(6)
+  cnpj                String?           @unique @db.VarChar(18)
+  razaoSocial         String?           @map("razao_social") @db.VarChar(255)
+  nomeFantasia        String?           @map("nome_fantasia") @db.VarChar(255)
+  tipoPessoa          String?           @default("FISICA") @map("tipo_pessoa") @db.VarChar(20)
+  contratosInvestidor ContratoCcb[]     @relation("ContratoInvestidor")
+  contratosTomador    ContratoCcb[]     @relation("ContratoTomador")
+  emprestimos         Emprestimo[]
+  historicoScores     HistoricoScore[]
+  investimentos       Investimento[]
+  logsAcoes           LogAcao[]
+  notificacoes        Notificacao[]
+  perfilInvestidor    PerfilInvestidor?
+  perfilTomador       PerfilTomador?
+  repasses            Repasse[]
 
   @@map("usuarios")
 }
 
 model PerfilTomador {
-  usuarioId       String  @id @map("usuario_id")
-  scoreCredito    Int?    @map("score_credito")
-  limiteCredito   Decimal? @map("limite_credito") 
-  openFinanceFake Json?   @map("open_finance_fake")
-  criadoEm        DateTime @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  usuario         Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId       String    @id @map("usuario_id") @db.VarChar(36)
+  scoreCredito    Int?      @map("score_credito")
+  limiteCredito   Decimal?  @map("limite_credito") @db.Decimal(12, 2)
+  openFinanceFake Json?     @map("open_finance_fake") @db.Json
+  criadoEm        DateTime? @map("criado_em") @db.Timestamp(6)
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("perfil_tomador")
 }
 
 model PerfilInvestidor {
-  usuarioId         String  @id @map("usuario_id")
-  rendaMensal       Decimal? @map("renda_mensal") 
-  patrimonioTotal   Decimal? @map("patrimonio_total") 
-  perfilRisco       PerfilRisco? @map("perfil_risco")
-  limiteInvestimento Decimal? @map("limite_investimento") 
-  openFinanceFake   Json?   @map("open_finance_fake")
-  criadoEm          DateTime @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  usuario           Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId          String    @id @map("usuario_id") @db.VarChar(36)
+  rendaMensal        Decimal?  @map("renda_mensal") @db.Decimal(12, 2)
+  patrimonioTotal    Decimal?  @map("patrimonio_total") @db.Decimal(15, 2)
+  perfilRisco        String?   @map("perfil_risco") @db.VarChar(20)
+  limiteInvestimento Decimal?  @map("limite_investimento") @db.Decimal(12, 2)
+  openFinanceFake    Json?     @map("open_finance_fake") @db.Json
+  criadoEm           DateTime? @map("criado_em") @db.Timestamp(6)
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("perfil_investidor")
 }
 
 model Emprestimo {
-  id            String      @id @default(cuid())
-  tomadorId     String      @map("tomador_id")
-  status        StatusEmprestimo @default(PENDENTE)
-  valorSolicitado Decimal   @map("valor_solicitado") 
-  valorAprovado Decimal?    @map("valor_aprovado") 
-  taxaJuros     Decimal?    @map("taxa_juros") 
-  prazoMeses    Int         @map("prazo_meses")
-  finalidade    String?
-  financiadoEm  DateTime?   @map("financiado_em")
-  criadoEm      DateTime    @default(now()) @map("criado_em")
-  atualizadoEm  DateTime    @updatedAt @map("atualizado_em")
+  id              String        @id @default(cuid()) @db.VarChar(36)
+  tomadorId       String        @map("tomador_id") @db.VarChar(36)
+  status          String?       @default("pendente") @db.VarChar(20)
+  valorSolicitado Decimal       @map("valor_solicitado") @db.Decimal(12, 2)
+  valorAprovado   Decimal?      @map("valor_aprovado") @db.Decimal(12, 2)
+  taxaJuros       Decimal?      @map("taxa_juros") @db.Decimal(5, 2)
+  prazoMeses      Int           @map("prazo_meses")
+  finalidade      String?       @db.VarChar(100)
+  financiadoEm    DateTime?     @map("financiado_em") @db.Timestamp(6)
+  criadoEm        DateTime?     @map("criado_em") @db.Timestamp(6)
+  atualizadoEm    DateTime?     @updatedAt @map("atualizado_em") @db.Timestamp(6)
+  contratoCcb     ContratoCcb?
+  tomador         Usuario       @relation(fields: [tomadorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  investimento    Investimento?
+  parcelas        Parcela[]
 
-  // Relacionamentos
-  tomador       Usuario     @relation(fields: [tomadorId], references: [id], onDelete: Cascade)
-  investimento  Investimento?
-  contratoCcb   ContratoCcb?
-  parcelas      Parcela[]
-
+  @@index([status], map: "idx_emprestimos_status")
   @@map("emprestimos")
 }
 
 model Investimento {
-  id            String      @id @default(cuid())
-  emprestimoId  String      @unique @map("emprestimo_id")
-  investidorId  String      @map("investidor_id")
-  valorInvestido Decimal    @map("valor_investido") 
-  status        StatusInvestimento @default(ATIVO)
-  criadoEm      DateTime    @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  emprestimo    Emprestimo  @relation(fields: [emprestimoId], references: [id], onDelete: Cascade)
-  investidor    Usuario     @relation(fields: [investidorId], references: [id], onDelete: Cascade)
+  id             String     @id @default(cuid()) @db.VarChar(36)
+  emprestimoId   String     @unique @map("emprestimo_id") @db.VarChar(36)
+  investidorId   String     @map("investidor_id") @db.VarChar(36)
+  valorInvestido Decimal    @map("valor_investido") @db.Decimal(12, 2)
+  status         String?    @default("ativo") @db.VarChar(20)
+  criadoEm       DateTime?  @map("criado_em") @db.Timestamp(6)
+  emprestimo     Emprestimo @relation(fields: [emprestimoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  investidor     Usuario    @relation(fields: [investidorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("investimentos")
 }
 
 model ContratoCcb {
-  id                String    @id @default(cuid())
-  emprestimoId      String    @unique @map("emprestimo_id")
-  investidorId      String    @map("investidor_id")
-  tomadorId         String    @map("tomador_id")
-  hashContrato      String?   @map("hash_contrato")
-  pdfUrl            String?   @map("pdf_url")
-  assinadoTomador   Boolean   @default(false) @map("assinado_tomador")
-  assinadoInvestidor Boolean  @default(false) @map("assinado_investidor")
-  executadoEm       DateTime? @map("executado_em")
-  criadoEm          DateTime  @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  emprestimo        Emprestimo @relation(fields: [emprestimoId], references: [id], onDelete: Cascade)
-  investidor        Usuario    @relation("ContratoInvestidor", fields: [investidorId], references: [id], onDelete: Cascade)
-  tomador           Usuario    @relation("ContratoTomador", fields: [tomadorId], references: [id], onDelete: Cascade)
+  id                 String     @id @default(cuid()) @db.VarChar(36)
+  emprestimoId       String     @unique @map("emprestimo_id") @db.VarChar(36)
+  investidorId       String     @map("investidor_id") @db.VarChar(36)
+  tomadorId          String     @map("tomador_id") @db.VarChar(36)
+  hashContrato       String?    @map("hash_contrato") @db.VarChar(66)
+  pdfUrl             String?    @map("pdf_url") @db.VarChar(500)
+  assinadoTomador    Boolean?   @default(false) @map("assinado_tomador")
+  assinadoInvestidor Boolean?   @default(false) @map("assinado_investidor")
+  executadoEm        DateTime?  @map("executado_em") @db.Timestamp(6)
+  criadoEm           DateTime?  @map("criado_em") @db.Timestamp(6)
+  emprestimo         Emprestimo @relation(fields: [emprestimoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  investidor         Usuario    @relation("ContratoInvestidor", fields: [investidorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tomador            Usuario    @relation("ContratoTomador", fields: [tomadorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("contratos_ccb")
 }
 
 model Parcela {
-  id            String      @id @default(cuid())
-  emprestimoId  String      @map("emprestimo_id")
-  dataVencimento DateTime   @map("data_vencimento")
-  valorParcela  Decimal     @map("valor_parcela")
-  pagoEm        DateTime?   @map("pago_em")
-  status        StatusParcela @default(PENDENTE)
-  criadoEm      DateTime    @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  emprestimo    Emprestimo  @relation(fields: [emprestimoId], references: [id], onDelete: Cascade)
-  repasses      Repasse[]
+  id             String     @id @default(cuid()) @db.VarChar(36)
+  emprestimoId   String     @map("emprestimo_id") @db.VarChar(36)
+  dataVencimento DateTime   @map("data_vencimento") @db.Date
+  valorParcela   Decimal    @map("valor_parcela") @db.Decimal(12, 2)
+  pagoEm         DateTime?  @map("pago_em") @db.Timestamp(6)
+  status         String?    @default("pendente") @db.VarChar(20)
+  criadoEm       DateTime?  @map("criado_em") @db.Timestamp(6)
+  emprestimo     Emprestimo @relation(fields: [emprestimoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  repasses       Repasse[]
 
   @@map("parcelas")
 }
 
 model Repasse {
-  id              String    @id @default(cuid())
-  parcelaId       String    @map("parcela_id")
-  investidorId    String    @map("investidor_id")
-  valorRepassado  Decimal   @map("valor_repassado") 
-  taxaPlataforma  Decimal   @default(0.00) @map("taxa_plataforma") 
-  dataRepassado   DateTime? @map("data_repassado")
-  criadoEm        DateTime  @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  parcela         Parcela   @relation(fields: [parcelaId], references: [id], onDelete: Cascade)
-  investidor      Usuario   @relation(fields: [investidorId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid()) @db.VarChar(36)
+  parcelaId      String    @map("parcela_id") @db.VarChar(36)
+  investidorId   String    @map("investidor_id") @db.VarChar(36)
+  valorRepassado Decimal   @map("valor_repassado") @db.Decimal(12, 2)
+  taxaPlataforma Decimal?  @default(0.00) @map("taxa_plataforma") @db.Decimal(12, 2)
+  dataRepassado  DateTime? @map("data_repassado") @db.Timestamp(6)
+  criadoEm       DateTime? @map("criado_em") @db.Timestamp(6)
+  investidor     Usuario   @relation(fields: [investidorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parcela        Parcela   @relation(fields: [parcelaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("repasses")
 }
 
 model LogAcao {
-  id          String    @id @default(cuid())
-  usuarioId   String?   @map("usuario_id")
-  acao        String
-  descricao   String?
-  ipOrigem    String?   @map("ip_origem")
-  criadoEm    DateTime  @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  usuario     Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  id        String    @id @default(cuid()) @db.VarChar(36)
+  usuarioId String?   @map("usuario_id") @db.VarChar(36)
+  acao      String    @db.VarChar(100)
+  descricao String?
+  ipOrigem  String?   @map("ip_origem") @db.VarChar(45)
+  criadoEm  DateTime? @map("criado_em") @db.Timestamp(6)
+  usuario   Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("logs_acoes")
 }
 
 model HistoricoScore {
-  id            String    @id @default(cuid())
-  usuarioId     String    @map("usuario_id")
-  score         Int
-  fonteCalculo  String    @map("fonte_calculo")
-  criadoEm      DateTime  @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid()) @db.VarChar(36)
+  usuarioId    String    @map("usuario_id") @db.VarChar(36)
+  score        Int
+  fonteCalculo String    @map("fonte_calculo") @db.VarChar(50)
+  criadoEm     DateTime? @map("criado_em") @db.Timestamp(6)
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("historico_scores")
 }
 
 model Notificacao {
-  id              String   @id @default(cuid())
-  usuarioId       String   @map("usuario_id")
-  titulo          String
+  id              String    @id @default(cuid()) @db.VarChar(36)
+  usuarioId       String    @map("usuario_id") @db.VarChar(36)
+  titulo          String    @db.VarChar(100)
   mensagem        String?
-  lida            Boolean  @default(false)
-  tipo            TipoNotificacao
-  linkRelacionado String?  @map("link_relacionado")
-  criadoEm        DateTime @default(now()) @map("criado_em")
-
-  // Relacionamentos
-  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  lida            Boolean?  @default(false)
+  tipo            String    @db.VarChar(30)
+  linkRelacionado String?   @map("link_relacionado") @db.VarChar(500)
+  criadoEm        DateTime? @map("criado_em") @db.Timestamp(6)
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("notificacoes")
-}
-
-// Enums
-enum TipoPerfil {
-  TOMADOR
-  INVESTIDOR
-}
-
-enum StatusKyc {
-  PENDENTE
-  APROVADO
-  REJEITADO
-}
-
-enum PerfilRisco {
-  CONSERVADOR
-  MODERADO
-  AGRESSIVO
-}
-
-enum StatusEmprestimo {
-  PENDENTE
-  FINANCIADO
-  ATIVO
-  CONCLUIDO
-  INADIMPLENTE
-}
-
-enum StatusInvestimento {
-  ATIVO
-  CONCLUIDO
-}
-
-enum StatusParcela {
-  PENDENTE
-  PAGO
-  ATRASADO
-}
-
-enum TipoNotificacao {
-  PAGAMENTO_RECEBIDO
-  EMPRESTIMO_FINANCIADO
-  LEMBRETE_VENCIMENTO
-  CONTRATO_ASSINADO
-  KYC_APROVADO
-  KYC_REJEITADO
-  GERAL
 }

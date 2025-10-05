@@ -1,9 +1,4 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/database'
-
-function toCurrencyBRL(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 function simulateHash(input: string): string {
   const data = new TextEncoder().encode(input)
@@ -19,65 +14,37 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { loanId, investorId, principal, monthlyRate, termMonths } = body ?? {}
 
-    if (!loanId || !investorId || !principal || !monthlyRate || !termMonths) {
-      return NextResponse.json({ success: false, error: 'Parâmetros inválidos' }, { status: 400 })
-    }
-
-    // Fetch core entities
-    const emprestimo = await prisma.emprestimo.findUnique({
-      where: { id: loanId },
-      include: { tomador: true, contratoCcb: true }
-    })
-
-    if (!emprestimo) {
-      return NextResponse.json({ success: false, error: 'Empréstimo não encontrado' }, { status: 404 })
-    }
-
-    const investidor = await prisma.usuario.findUnique({ where: { id: investorId } })
-    if (!investidor) {
-      return NextResponse.json({ success: false, error: 'Investidor não encontrado' }, { status: 404 })
-    }
-
-    // Ensure or simulate contract record
+    // Dados mockados
     const hashContrato = simulateHash(`${loanId}|${investorId}|${principal}|${monthlyRate}|${termMonths}`)
     const simulatedAddress = `0x${simulateHash(loanId).slice(6, 46)}`
 
-    let contrato = await prisma.contratoCcb.findUnique({ where: { emprestimoId: loanId } })
-
-    const borrowerName = `${emprestimo.tomador.nome} ${emprestimo.tomador.sobrenome}`
-    const investorName = `${investidor.nome} ${investidor.sobrenome}`
-    const borrowerCpf = emprestimo.tomador.cpf
-    const investorCpfCnpj = investidor.cpf
-    const baseParams = `principal=${encodeURIComponent(principal)}&prazoMeses=${encodeURIComponent(termMonths)}&taxaMes=${encodeURIComponent(monthlyRate)}&borrowerName=${encodeURIComponent(borrowerName)}&borrowerCpf=${encodeURIComponent(borrowerCpf)}&borrowerAddress=${encodeURIComponent('(informar)')}&investorName=${encodeURIComponent(investorName)}&investorCpfCnpj=${encodeURIComponent(investorCpfCnpj)}&investorAddress=${encodeURIComponent('(informar)')}`
-
-    if (!contrato) {
-      contrato = await prisma.contratoCcb.create({
-        data: {
-          emprestimoId: loanId,
-          investidorId: investorId,
-          tomadorId: emprestimo.tomadorId,
-          hashContrato,
-          pdfUrl: `/api/contracts/${loanId}/pdf?${baseParams}`
-        }
-      })
-    } else if (!contrato.hashContrato || !contrato.pdfUrl) {
-      contrato = await prisma.contratoCcb.update({
-        where: { emprestimoId: loanId },
-        data: {
-          hashContrato: contrato.hashContrato ?? hashContrato,
-          pdfUrl: contrato.pdfUrl ?? `/api/contracts/${loanId}/pdf?${baseParams}`
-        }
-      })
+    // Dados mockados baseados no loanId
+    const mockData = {
+      "emp_1": {
+        borrowerName: "Ana Costa",
+        investorName: "Maria Oliveira",
+        borrowerCpf: "123.456.789-00",
+        investorCpfCnpj: "987.654.321-00"
+      }
     }
 
+    const data = mockData[loanId as keyof typeof mockData] || {
+      borrowerName: "Tomador (simulado)",
+      investorName: "Investidor (simulado)",
+      borrowerCpf: "(informar)",
+      investorCpfCnpj: "(informar)"
+    }
+
+    const baseParams = `userType=investidor&principal=${encodeURIComponent(principal)}&prazoMeses=${encodeURIComponent(termMonths)}&taxaMes=${encodeURIComponent(monthlyRate)}&borrowerName=${encodeURIComponent(data.borrowerName)}&borrowerCpf=${encodeURIComponent(data.borrowerCpf)}&borrowerAddress=${encodeURIComponent('(informar)')}&investorName=${encodeURIComponent(data.investorName)}&investorCpfCnpj=${encodeURIComponent(data.investorCpfCnpj)}&investorAddress=${encodeURIComponent('(informar)')}`
+
     const responseContract = {
-      id: contrato.emprestimoId,
-      loanId: contrato.emprestimoId,
+      id: loanId,
+      loanId: loanId,
       investorId,
-      borrowerId: emprestimo.tomadorId,
-      hashContrato: contrato.hashContrato ?? hashContrato,
+      borrowerId: 'tomador_simulado',
+      hashContrato,
       simulatedAddress,
-      pdfUrl: contrato.pdfUrl ?? `/api/contracts/${loanId}/pdf`,
+      pdfUrl: `/api/contracts/${loanId}/pdf?${baseParams}`,
       financialTerms: {
         principal,
         monthlyRate,
@@ -92,5 +59,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Erro interno' }, { status: 500 })
   }
 }
-
-

@@ -11,6 +11,8 @@ export function useAuth() {
   useEffect(() => {
     // Carregar usuário logado
     const token = localStorage.getItem('auth_token')
+    const storedUser = localStorage.getItem('user')
+    
     if (token) {
       AuthController.getCurrentUser(token).then(currentUser => {
         setUser(currentUser)
@@ -18,6 +20,15 @@ export function useAuth() {
       }).catch(() => {
         setLoading(false)
       })
+    } else if (storedUser) {
+      // Para usuários empresa que foram registrados
+      try {
+        const userData = JSON.parse(storedUser)
+        setUser(userData)
+        setLoading(false)
+      } catch {
+        setLoading(false)
+      }
     } else {
       setLoading(false)
     }
@@ -35,6 +46,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
     setUser(null)
   }
 

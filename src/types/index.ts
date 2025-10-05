@@ -4,7 +4,11 @@ export interface User {
   name: string;
   email: string;
   profileType: 'INVESTOR' | 'BORROWER'; // Define se é Investidor ou Tomador
+  personType: 'FISICA' | 'JURIDICA'; // Define se é Pessoa Física ou Jurídica
   cpf?: string;
+  cnpj?: string;
+  razaoSocial?: string;
+  nomeFantasia?: string;
   phone?: string;
   birthDate?: string;
   kycStatus?: string; // Status de verificação KYC

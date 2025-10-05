@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useLoans } from "@/contexts/LoansContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,8 @@ import {
   AlertCircle,
   TrendingDown,
   Target,
+  LogOut,
+  Trash2,
 } from "lucide-react"
 
 interface Notification {
@@ -50,6 +53,12 @@ export default function BorrowerDashboard() {
   const [showContractModal, setShowContractModal] = useState(false)
   const [contractData, setContractData] = useState<null | { pdfUrl: string; hashContrato: string; simulatedAddress: string }>(null)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
+  const [loanForm, setLoanForm] = useState({
+    amount: '',
+    purpose: 'Capital de giro',
+    term: ''
+  })
+  const { loans: userLoans, addLoan, deleteLoan } = useLoans()
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
 
@@ -77,10 +86,10 @@ export default function BorrowerDashboard() {
       profileType: "BORROWER" as const,
     },
     metrics: {
-      totalAmount: 5000,
-      activeCount: 1,
+      totalAmount: 13000,
+      activeCount: 2,
       creditScore: 780,
-      availableLimit: 15000,
+      availableLimit: 2000,
     },
     notifications: [
       {
@@ -112,6 +121,57 @@ export default function BorrowerDashboard() {
 
   const handleProfileClick = () => {
     setShowProfilePopup(true)
+  }
+
+  const handleLogout = () => {
+    router.push("/login")
+  }
+
+  const handleLoanSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!loanForm.amount || !loanForm.term) {
+      alert('Por favor, preencha todos os campos')
+      return
+    }
+
+    addLoan({
+      amount: parseFloat(loanForm.amount),
+      purpose: loanForm.purpose,
+      term: parseInt(loanForm.term),
+      interestRate: 2.1
+    })
+
+    setLoanForm({ amount: '', purpose: 'Capital de giro', term: '' })
+    setActiveTab("emprestimos-ativos")
+    
+    // Adicionar notificação
+    const newNotification = {
+      id: Date.now().toString(),
+      title: "Empréstimo Solicitado",
+      message: `Sua solicitação de R$ ${parseFloat(loanForm.amount).toLocaleString()} foi enviada para análise!`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      type: "success"
+    }
+    setNotifications(prev => [newNotification, ...prev])
+  }
+
+  const handleDeleteLoan = (loanId: string) => {
+    if (confirm('Tem certeza que deseja cancelar esta solicitação de empréstimo?')) {
+      deleteLoan(loanId)
+      
+      // Adicionar notificação
+      const newNotification = {
+        id: Date.now().toString(),
+        title: "Solicitação Cancelada",
+        message: "Sua solicitação de empréstimo foi cancelada com sucesso",
+        read: false,
+        createdAt: new Date().toISOString(),
+        type: "warning"
+      }
+      setNotifications(prev => [newNotification, ...prev])
+    }
   }
 
   const boletosData = [
@@ -220,8 +280,8 @@ export default function BorrowerDashboard() {
       interestRate: 2.1,
       startDate: "2024-10-01",
       endDate: "2026-04-01",
-      monthlyPayment: 0,
-      totalAmount: 0,
+      monthlyPayment: 206.50,
+      totalAmount: 8000.00,
       paidInstallments: 0,
       totalInstallments: 18,
       investors: [
@@ -256,14 +316,14 @@ export default function BorrowerDashboard() {
       const data = await resp.json()
       if (data?.success && data.contract) {
         setContractData({
-          pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf`,
+          pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf?userType=tomador`,
           hashContrato: data.contract.hashContrato ?? '—',
           simulatedAddress: data.contract.simulatedAddress ?? '—'
         })
         setShowContractModal(true)
       } else {
         setContractData({
-          pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+          pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
           hashContrato: '—',
           simulatedAddress: '—'
         })
@@ -271,7 +331,7 @@ export default function BorrowerDashboard() {
       }
     } catch (_) {
       setContractData({
-        pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+        pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
         hashContrato: '—',
         simulatedAddress: '—'
       })
@@ -297,7 +357,7 @@ export default function BorrowerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-24">
       {showCongratulations && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full animate-fade-in-up shadow-2xl">
@@ -320,85 +380,83 @@ export default function BorrowerDashboard() {
         </div>
       )}
 
-      <div className="p-6 space-y-6">
-        {/* Header */}
+      {/* Header */}
+      <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleProfileClick}
-              className="w-10 h-10 bg-green-100 rounded-full hover:bg-green-200 border-2 border-green-300"
+              className="w-10 h-10 bg-primary/10 rounded-full hover:bg-primary/20"
             >
-              <User className="w-5 h-5 text-green-600" />
+              <User className="w-5 h-5 text-primary" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Olá, {dashboardData.user.name}</h1>
-              <p className="text-muted-foreground">Bem-vindo de volta!</p>
+              <h1 className="text-lg font-semibold text-foreground">Olá, {dashboardData.user.name}!</h1>
+              <p className="text-sm text-muted-foreground">Bem-vindo ao seu painel de empréstimos</p>
             </div>
           </div>
-          <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setShowNotificationsPopup(true)}
-              className="hover:bg-accent/10"
-            >
-              <Bell className="h-5 w-5" />
-              {notifications.filter((n: Notification) => !n.read).length > 0 && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-              )}
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowNotificationsPopup(true)}>
+              <Bell className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="p-6 space-y-6">
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Total Emprestado</p>
-                  <p className="text-lg font-bold">R$ {dashboardData.metrics.totalAmount.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Total Emprestado</p>
+                  <p className="text-lg font-bold text-foreground">R$ {dashboardData.metrics.totalAmount.toLocaleString()}</p>
                 </div>
+                <DollarSign className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Empréstimos Ativos</p>
-                  <p className="text-lg font-bold">{dashboardData.metrics.activeCount}</p>
+                  <p className="text-sm text-muted-foreground">Empréstimos Ativos</p>
+                  <p className="text-lg font-bold text-foreground">{dashboardData.metrics.activeCount}</p>
                 </div>
+                <TrendingUp className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Score de Crédito</p>
-                  <p className="text-lg font-bold">{dashboardData.metrics.creditScore}</p>
+                  <p className="text-sm text-muted-foreground">Score de Crédito</p>
+                  <p className="text-lg font-bold text-foreground">{dashboardData.metrics.creditScore}</p>
                   <p className="text-xs text-green-600">Excelente</p>
                 </div>
+                <BarChart3 className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Limite Disponível</p>
-                  <p className="text-lg font-bold">R$ {dashboardData.metrics.availableLimit.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Limite Disponível</p>
+                  <p className="text-lg font-bold text-foreground">R$ {dashboardData.metrics.availableLimit.toLocaleString()}</p>
                 </div>
+                <CreditCard className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -409,7 +467,7 @@ export default function BorrowerDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Empréstimos Ativos</h2>
-              <Badge variant="default">2 aprovado(s)</Badge>
+              <Badge variant="default">{loansData.length + userLoans.length} empréstimo(s)</Badge>
             </div>
 
             <div className="space-y-4">
@@ -520,6 +578,100 @@ export default function BorrowerDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Novos empréstimos solicitados pelo usuário */}
+              {userLoans.map((loan) => (
+                <Card key={loan.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">R$ {loan.amount.toLocaleString()},00</h3>
+                        <p className="text-sm text-muted-foreground">{loan.purpose}</p>
+                      </div>
+                      <Badge className={
+                        loan.status === "Aprovado" 
+                          ? "bg-green-100 text-green-800"
+                          : loan.status === "Parcialmente Financiado"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }>
+                        <Clock className="w-4 h-4 mr-1" />
+                        {loan.status}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progresso do Financiamento</span>
+                        <span className="text-foreground font-medium">{loan.progress}%</span>
+                      </div>
+                      <Progress value={loan.progress} />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>
+                          {loan.progress === 0 ? "Em análise" : 
+                           loan.progress < 100 ? "Parcialmente financiado" : 
+                           "Totalmente financiado"}
+                        </span>
+                        <span>
+                          {loan.progress === 0 ? "Aguardando investidores" :
+                           loan.progress < 100 ? "Ainda aceitando investimentos" :
+                           "Financiamento completo"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                      <div>
+                        <span className="text-muted-foreground">Prazo:</span>
+                        <span className="ml-2 text-foreground">{loan.term} meses</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Taxa:</span>
+                        <span className="ml-2 text-foreground">{loan.interestRate}% a.m.</span>
+                      </div>
+                      {loan.monthlyPayment > 0 && (
+                        <>
+                          <div>
+                            <span className="text-muted-foreground">Parcela mensal:</span>
+                            <span className="ml-2 text-foreground">R$ {loan.monthlyPayment.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Total a pagar:</span>
+                            <span className="ml-2 text-foreground">R$ {loan.totalAmount.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewLoanDetails(loan)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
+                      {loan.progress === 0 && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleDeleteLoan(loan.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      )}
+                      {loan.progress > 0 && (
+                        <Button size="sm" variant="default">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Contrato
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         )}
@@ -535,43 +687,55 @@ export default function BorrowerDashboard() {
               <CardHeader>
                 <CardTitle className="text-lg">Dados do Empréstimo</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground">Valor Solicitado</label>
-                  <div className="relative mt-1">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">R$</span>
+              <CardContent>
+                <form onSubmit={handleLoanSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Valor Solicitado</label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">R$</span>
+                      <input
+                        type="number"
+                        placeholder="0,00"
+                        value={loanForm.amount}
+                        onChange={(e) => setLoanForm(prev => ({ ...prev, amount: e.target.value }))}
+                        className="w-full pl-8 pr-4 py-2 border border-border rounded-md bg-background text-foreground"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Finalidade</label>
+                    <select 
+                      value={loanForm.purpose}
+                      onChange={(e) => setLoanForm(prev => ({ ...prev, purpose: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    >
+                      <option value="Capital de giro">Capital de giro</option>
+                      <option value="Expansão do negócio">Expansão do negócio</option>
+                      <option value="Equipamentos">Equipamentos</option>
+                      <option value="Reforma">Reforma</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Prazo (meses)</label>
                     <input
                       type="number"
-                      placeholder="0,00"
-                      className="w-full pl-8 pr-4 py-2 border border-border rounded-md bg-background text-foreground"
+                      placeholder="12"
+                      value={loanForm.term}
+                      onChange={(e) => setLoanForm(prev => ({ ...prev, term: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                      required
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="text-sm font-medium text-foreground">Finalidade</label>
-                  <select className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background text-foreground">
-                    <option>Capital de giro</option>
-                    <option>Expansão do negócio</option>
-                    <option>Equipamentos</option>
-                    <option>Reforma</option>
-                    <option>Outros</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">Prazo (meses)</label>
-                  <input
-                    type="number"
-                    placeholder="12"
-                    className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
-                </div>
-
-                <Button className="w-full" size="lg">
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Solicitar Análise
-                </Button>
+                  <Button type="submit" className="w-full" size="lg">
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Solicitar Análise
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>
@@ -744,36 +908,108 @@ export default function BorrowerDashboard() {
                         </defs>
                         <rect width="100%" height="100%" fill="url(#grid)" />
                         
-                        {/* Data points and line */}
-                        <polyline
-                          fill="none"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          points="40,160 120,140 200,120 280,100 360,80"
-                        />
-                        
-                        {/* Data points */}
-                        <circle cx="40" cy="160" r="4" fill="hsl(var(--primary))" />
-                        <circle cx="120" cy="140" r="4" fill="hsl(var(--primary))" />
-                        <circle cx="200" cy="120" r="4" fill="hsl(var(--primary))" />
-                        <circle cx="280" cy="100" r="4" fill="hsl(var(--primary))" />
-                        <circle cx="360" cy="80" r="6" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="2" />
-                        
-                        {/* Labels */}
-                        <text x="40" y="190" textAnchor="middle" className="text-xs fill-muted-foreground">Jan</text>
-                        <text x="120" y="190" textAnchor="middle" className="text-xs fill-muted-foreground">Fev</text>
-                        <text x="200" y="190" textAnchor="middle" className="text-xs fill-muted-foreground">Mar</text>
-                        <text x="280" y="190" textAnchor="middle" className="text-xs fill-muted-foreground">Abr</text>
-                        <text x="360" y="190" textAnchor="middle" className="text-xs fill-muted-foreground">Mai</text>
-                        
-                        {/* Score values */}
-                        <text x="40" y="150" textAnchor="middle" className="text-xs font-medium fill-foreground">720</text>
-                        <text x="120" y="130" textAnchor="middle" className="text-xs font-medium fill-foreground">740</text>
-                        <text x="200" y="110" textAnchor="middle" className="text-xs font-medium fill-foreground">750</text>
-                        <text x="280" y="90" textAnchor="middle" className="text-xs font-medium fill-foreground">760</text>
-                        <text x="360" y="70" textAnchor="middle" className="text-xs font-medium fill-primary">780</text>
+                        {/* Dados do score com variações realistas */}
+                        {(() => {
+                          // Dados realistas com variações diferentes para demonstrar o comportamento do gráfico
+                          const scoreData = [
+                            { month: "Jan", score: 720, x: 40 },
+                            { month: "Fev", score: 745, x: 120 }, // +25 (subida acentuada)
+                            { month: "Mar", score: 738, x: 200 }, // -7 (queda leve)
+                            { month: "Abr", score: 768, x: 280 }, // +30 (subida forte)
+                            { month: "Mai", score: 780, x: 360 }  // +12 (subida moderada)
+                          ];
+                          
+                          // Calcular posições Y baseadas nos valores reais
+                          const minScore = Math.min(...scoreData.map(d => d.score)) - 20; // Margem inferior
+                          const maxScore = Math.max(...scoreData.map(d => d.score)) + 20; // Margem superior
+                          const chartHeight = 160; // Altura do gráfico
+                          const chartTop = 20; // Margem superior
+                          
+                          const calculateY = (score: number) => {
+                            const normalizedScore = (score - minScore) / (maxScore - minScore);
+                            return chartTop + chartHeight - (normalizedScore * chartHeight);
+                          };
+                          
+                          const points = scoreData.map(d => `${d.x},${calculateY(d.score)}`).join(' ');
+                          
+                          // Calcular variações entre pontos
+                          const variations = scoreData.slice(1).map((point, index) => 
+                            point.score - scoreData[index].score
+                          );
+                          
+                          return (
+                            <>
+                              {/* Linha do gráfico */}
+                              <polyline
+                                fill="none"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                points={points}
+                              />
+                              
+                              {/* Pontos de dados */}
+                              {scoreData.map((point, index) => (
+                                <g key={index}>
+                                  <circle
+                                    cx={point.x}
+                                    cy={calculateY(point.score)}
+                                    r={index === scoreData.length - 1 ? "6" : "4"}
+                                    fill="hsl(var(--primary))"
+                                    stroke={index === scoreData.length - 1 ? "hsl(var(--background))" : "none"}
+                                    strokeWidth={index === scoreData.length - 1 ? "2" : "0"}
+                                  />
+                                  
+                                  {/* Labels dos meses */}
+                                  <text
+                                    x={point.x}
+                                    y="190"
+                                    textAnchor="middle"
+                                    className="text-xs fill-muted-foreground"
+                                  >
+                                    {point.month}
+                                  </text>
+                                  
+                                  {/* Valores do score */}
+                                  <text
+                                    x={point.x}
+                                    y={calculateY(point.score) - 10}
+                                    textAnchor="middle"
+                                    className={`text-xs font-medium ${
+                                      index === scoreData.length - 1 ? 'fill-primary' : 'fill-foreground'
+                                    }`}
+                                  >
+                                    {point.score}
+                                  </text>
+                                  
+                                  {/* Indicador de variação */}
+                                  {index > 0 && (
+                                    <text
+                                      x={point.x}
+                                      y={calculateY(point.score) + 20}
+                                      textAnchor="middle"
+                                      className={`text-xs font-medium ${
+                                        variations[index - 1] > 0 ? 'fill-green-600' : 'fill-red-600'
+                                      }`}
+                                    >
+                                      {variations[index - 1] > 0 ? '+' : ''}{variations[index - 1]}
+                                    </text>
+                                  )}
+                                </g>
+                              ))}
+                              
+                              {/* Eixo Y com valores de referência */}
+                              <g className="text-xs fill-muted-foreground">
+                                <text x="10" y="25">{maxScore}</text>
+                                <text x="10" y="65">{Math.round((maxScore + minScore) / 2 + 20)}</text>
+                                <text x="10" y="105">{Math.round((maxScore + minScore) / 2)}</text>
+                                <text x="10" y="145">{Math.round((maxScore + minScore) / 2 - 20)}</text>
+                                <text x="10" y="185">{minScore}</text>
+                              </g>
+                            </>
+                          );
+                        })()}
                       </svg>
                     </div>
 
@@ -781,6 +1017,23 @@ export default function BorrowerDashboard() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Evolução:</span>
                         <span className="text-green-600 font-medium">+60 pontos</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>Variação mensal:</span>
+                        <span className="flex gap-1">
+                          <span className="text-green-600">+25</span>
+                          <span className="text-red-600">-7</span>
+                          <span className="text-green-600">+30</span>
+                          <span className="text-green-600">+12</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>Maior crescimento:</span>
+                        <span className="text-green-600 font-medium">Abril (+30)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>Única queda:</span>
+                        <span className="text-red-600 font-medium">Março (-7)</span>
                       </div>
                     </div>
                   </div>
@@ -942,24 +1195,24 @@ export default function BorrowerDashboard() {
 
       {/* Contract Modal */}
       {showContractModal && contractData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contractData.hashContrato}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all text-xs">{contractData.simulatedAddress}</span></div>
             </div>
-            <div className="p-6 space-y-4 text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contractData.hashContrato}</span></div>
-                <div className="flex justify-between md:col-span-2"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all">{contractData.simulatedAddress}</span></div>
-              </div>
-              <div className="h-[70vh] border border-border rounded overflow-hidden">
-                <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
-              </div>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
             </div>
-            <div className="p-6 border-t border-border flex justify-between">
-              <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
-              <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
-            </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
           </div>
         </div>
       )}
@@ -967,65 +1220,41 @@ export default function BorrowerDashboard() {
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border">
         <div className="flex items-center justify-around py-3 px-6">
-          <button onClick={() => setActiveTab("pedir-emprestimos")} className="flex flex-col items-center space-y-1">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                activeTab === "pedir-emprestimos" ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <DollarSign className={`w-5 h-5 ${activeTab === "pedir-emprestimos" ? "text-primary-foreground" : "text-muted-foreground"}`} />
-            </div>
-            <span
-              className={`text-xs transition-all duration-200 ${activeTab === "pedir-emprestimos" ? "text-primary font-bold" : "text-muted-foreground"}`}
-            >
-              Pedir Empréstimo
-            </span>
-          </button>
-
-          <button onClick={() => setActiveTab("boletos")} className="flex flex-col items-center space-y-1">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                activeTab === "boletos" ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <FileText className={`w-5 h-5 ${activeTab === "boletos" ? "text-primary-foreground" : "text-muted-foreground"}`} />
-            </div>
-            <span
-              className={`text-xs transition-all duration-200 ${activeTab === "boletos" ? "text-primary font-bold" : "text-muted-foreground"}`}
-            >
-              Boletos
-            </span>
-          </button>
-
-          <button onClick={() => setActiveTab("emprestimos-ativos")} className="flex flex-col items-center space-y-1">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                activeTab === "emprestimos-ativos" ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <TrendingUp className={`w-5 h-5 ${activeTab === "emprestimos-ativos" ? "text-primary-foreground" : "text-muted-foreground"}`} />
-            </div>
-            <span
-              className={`text-xs transition-all duration-200 ${activeTab === "emprestimos-ativos" ? "text-primary font-bold" : "text-muted-foreground"}`}
-            >
-              Empréstimos Ativos
-            </span>
-          </button>
-
-          <button onClick={() => setActiveTab("analises")} className="flex flex-col items-center space-y-1">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                activeTab === "analises" ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <PieChart className={`w-5 h-5 ${activeTab === "analises" ? "text-primary-foreground" : "text-muted-foreground"}`} />
-            </div>
-            <span
-              className={`text-xs transition-all duration-200 ${activeTab === "analises" ? "text-primary font-bold" : "text-muted-foreground"}`}
-            >
-              Análises
-            </span>
-          </button>
+          {[
+            { id: "pedir-emprestimos", label: "Pedir Empréstimo", icon: DollarSign },
+            { id: "boletos", label: "Boletos", icon: FileText },
+            { id: "emprestimos-ativos", label: "Empréstimos Ativos", icon: TrendingUp },
+            { id: "analises", label: "Análises", icon: PieChart },
+          ].map((tab) => {
+            const IconComponent = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex flex-col items-center space-y-1"
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    isActive 
+                      ? "bg-primary text-primary-foreground shadow-lg scale-110" 
+                      : "bg-muted/20 hover:bg-muted/40"
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" />
+                </div>
+                <span
+                  className={`text-xs transition-all duration-200 ${
+                    isActive 
+                      ? "text-primary font-bold" 
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 

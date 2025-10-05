@@ -37,8 +37,12 @@ export class AuthController {
           email: data.user.email,
           name: data.user.nome,
           cpf: data.user.cpf,
+          cnpj: data.user.cnpj,
+          razaoSocial: data.user.razaoSocial,
+          nomeFantasia: data.user.nomeFantasia,
           phone: data.user.telefone,
           profileType: data.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+          personType: data.user.tipoPessoa === 'FISICA' ? 'FISICA' : 'JURIDICA',
           kycStatus: data.user.statusKyc
         },
         token: data.token
@@ -78,8 +82,12 @@ export class AuthController {
           email: result.user.email,
           name: result.user.nome,
           cpf: result.user.cpf,
+          cnpj: result.user.cnpj,
+          razaoSocial: result.user.razaoSocial,
+          nomeFantasia: result.user.nomeFantasia,
           phone: result.user.telefone,
           profileType: result.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+          personType: result.user.tipoPessoa === 'FISICA' ? 'FISICA' : 'JURIDICA',
           kycStatus: result.user.statusKyc
         },
         token: result.token
@@ -113,8 +121,12 @@ export class AuthController {
         email: data.user.email,
         name: data.user.nome,
         cpf: data.user.cpf,
+        cnpj: data.user.cnpj,
+        razaoSocial: data.user.razaoSocial,
+        nomeFantasia: data.user.nomeFantasia,
         phone: data.user.telefone,
         profileType: data.user.tipoPerfil === 'TOMADOR' ? 'BORROWER' : 'INVESTOR',
+        personType: data.user.tipoPessoa === 'FISICA' ? 'FISICA' : 'JURIDICA',
         kycStatus: data.user.statusKyc
       }
     } catch (error) {
