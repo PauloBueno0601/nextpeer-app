@@ -1,8 +1,11 @@
+// Importações necessárias para o sistema de investimentos
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 
+// Função GET: Buscar investimentos de um investidor
 export async function GET(request: NextRequest) {
   try {
+    // Verificar se o token de autorização foi fornecido
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -11,11 +14,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Extrair ID do usuário do token JWT
     const token = authHeader.split(' ')[1]
     const [userId] = Buffer.from(token, 'base64').toString().split(':')
 
+    // Buscar todos os investimentos do investidor com dados relacionados
     const investimentos = await prisma.investimento.findMany({
-      where: { investidorId: userId },
+      where: { investidorId: userId }, // Filtrar apenas investimentos do usuário logado
       include: {
         emprestimo: {
           include: {
@@ -28,15 +33,17 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: { criadoEm: 'desc' }
+      orderBy: { criadoEm: 'desc' } // Ordenar por data de criação (mais recentes primeiro)
     })
 
+    // Retornar lista de investimentos
     return NextResponse.json({
       success: true,
       investimentos
     })
 
   } catch (error) {
+    // Log de erro e retorno de erro genérico
     console.error('Erro ao buscar investimentos:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno do servidor' },

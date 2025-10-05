@@ -1,8 +1,11 @@
+// Importações necessárias para o sistema de empréstimos
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 
+// Função GET: Buscar empréstimos de um tomador
 export async function GET(request: NextRequest) {
   try {
+    // Verificar se o token de autorização foi fornecido
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -11,12 +14,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Extrair ID do usuário do token JWT
     const token = authHeader.split(' ')[1]
     const [userId] = Buffer.from(token, 'base64').toString().split(':')
 
+    // Buscar todos os empréstimos do tomador com dados relacionados
     const emprestimos = await prisma.emprestimo.findMany({
-      where: { tomadorId: userId },
+      where: { tomadorId: userId }, // Filtrar apenas empréstimos do usuário logado
       include: {
+        // Incluir dados do investimento e investidor
         investimento: {
           include: {
             investidor: {
@@ -27,19 +33,22 @@ export async function GET(request: NextRequest) {
             }
           }
         },
+        // Incluir parcelas ordenadas por data de vencimento
         parcelas: {
           orderBy: { dataVencimento: 'asc' }
         }
       },
-      orderBy: { criadoEm: 'desc' }
+      orderBy: { criadoEm: 'desc' } // Ordenar por data de criação (mais recentes primeiro)
     })
 
+    // Retornar lista de empréstimos
     return NextResponse.json({
       success: true,
       emprestimos
     })
 
   } catch (error) {
+    // Log de erro e retorno de erro genérico
     console.error('Erro ao buscar empréstimos:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno do servidor' },

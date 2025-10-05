@@ -1,8 +1,11 @@
+// Importações necessárias para o sistema de métricas do dashboard
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 
+// Função GET: Buscar métricas personalizadas do dashboard
 export async function GET(request: NextRequest) {
   try {
+    // Verificar se o token de autorização foi fornecido
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -11,9 +14,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Extrair ID do usuário do token JWT
     const token = authHeader.split(' ')[1]
     const [userId] = Buffer.from(token, 'base64').toString().split(':')
 
+    // Buscar tipo de perfil do usuário para personalizar métricas
     const user = await prisma.usuario.findUnique({
       where: { id: userId },
       select: { tipoPerfil: true }
@@ -26,8 +31,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Personalizar métricas baseado no tipo de usuário
     if (user.tipoPerfil === 'TOMADOR') {
-      // Métricas para tomador
+      // MÉTRICAS PARA TOMADOR DE EMPRÉSTIMOS
+      
+      // Buscar todos os empréstimos do tomador
       const emprestimos = await prisma.emprestimo.findMany({
         where: { tomadorId: userId },
         select: {
@@ -37,6 +45,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
+      // Buscar perfil de crédito do tomador
       const perfilTomador = await prisma.perfilTomador.findUnique({
         where: { usuarioId: userId },
         select: {
@@ -45,6 +54,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
+      // Calcular totais de empréstimos
       const totalSolicitado = emprestimos.reduce((sum, emp) => sum + Number(emp.valorSolicitado), 0)
       const totalAprovado = emprestimos.reduce((sum, emp) => sum + Number(emp.valorAprovado || 0), 0)
       const ativosCount = emprestimos.filter(emp => 

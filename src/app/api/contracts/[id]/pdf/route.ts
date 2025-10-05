@@ -1,15 +1,20 @@
+// Importações necessárias para geração de PDF
 import { NextResponse } from 'next/server'
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 
+// Configuração para execução no servidor Node.js
 export const runtime = 'nodejs'
 
+// Função para formatar valores em Real brasileiro
 function formatBRL(value: number): string {
-  // A conversão para Decimal do Prisma pode exigir `Number()`
+  // Converte o valor para formato de moeda brasileira
   return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+// Função para converter valor numérico para extenso (simplificada)
 function porExtensoBRL(valor: number): string {
-  // implementação simplificada apenas para rótulo
+  // Implementação simplificada para demonstração
+  // Em produção, usar biblioteca especializada como 'extenso'
   return `${formatBRL(valor)} (valor por extenso simplificado)`
 }
 
