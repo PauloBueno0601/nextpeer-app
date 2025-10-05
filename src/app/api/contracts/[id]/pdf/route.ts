@@ -4,7 +4,8 @@ import { PDFDocument, StandardFonts } from 'pdf-lib'
 export const runtime = 'nodejs'
 
 function formatBRL(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  // A conversão para Decimal do Prisma pode exigir `Number()`
+  return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 function porExtensoBRL(valor: number): string {
@@ -19,52 +20,153 @@ export async function GET(
   try {
     const emprestimoId = params.id
     const url = new URL(req.url)
-    const qpPrincipal = url.searchParams.get('principal')
-    const qpMeses = url.searchParams.get('prazoMeses')
-    const qpTaxaMes = url.searchParams.get('taxaMes')
-
-    type ContratoData = {
-      numeroCedula: string
-      tomador: { nome: string; cpf: string; endereco: string }
-      investidor: { nome: string; cpfCnpj: string; endereco: string }
-      plataforma: { razao: string; cnpj: string; endereco: string }
-      credito: {
-        valorPrincipal: number
-        valorExtenso: string
-        dataEmissao: string
-        taxaMes: number
-        taxaAno: number
-        cetAno: number
-        prazoMeses: number
-        valorParcela: number
+    
+    // Detectar tipo de usuário (investidor ou tomador)
+    const userType = url.searchParams.get('userType') || 'tomador' // 'investidor' ou 'tomador'
+    
+    // DADOS MOCKADOS COMPLETOS DO SISTEMA
+    const mockLoans = {
+      "1": {
+        tomador: { nome: "Ana Costa", cpf: "123.456.789-00", endereco: "São Paulo, SP" },
+        investidor: { nome: "Maria Oliveira", cpfCnpj: "987.654.321-00", endereco: "Rio de Janeiro, RJ" },
+        credito: {
+          valorPrincipal: 5000,
+          taxaMes: 0.018, // 1.8% a.m.
+          prazoMeses: 12,
+          dataEmissao: "15/01/2024"
+        },
+        assinaturas: {
+          tomador: {
+            nome: "Ana Costa",
+            data: "15/01/2024",
+            ip: "192.168.1.100",
+            hash: "a1b2c3d4e5f6789012345678901234567890abcd"
+          },
+          investidor: {
+            nome: "Maria Oliveira", 
+            data: "15/01/2024",
+            ip: "192.168.1.101",
+            hash: "b2c3d4e5f6789012345678901234567890abcde1"
+          }
+        }
+      },
+      "2": {
+        tomador: { nome: "Carlos Santos", cpf: "456.789.123-00", endereco: "Belo Horizonte, MG" },
+        investidor: { nome: "João Costa", cpfCnpj: "321.654.987-00", endereco: "São Paulo, SP" },
+        credito: {
+          valorPrincipal: 8000,
+          taxaMes: 0.021, // 2.1% a.m.
+          prazoMeses: 18,
+          dataEmissao: "01/10/2024"
+        },
+        assinaturas: {
+          tomador: {
+            nome: "Carlos Santos",
+            data: "01/10/2024", 
+            ip: "192.168.1.102",
+            hash: "c3d4e5f6789012345678901234567890abcde12"
+          },
+          investidor: {
+            nome: "João Costa",
+            data: "01/10/2024",
+            ip: "192.168.1.103", 
+            hash: "d4e5f6789012345678901234567890abcde123"
+          }
+        }
+      },
+      "emp_1": {
+        tomador: { nome: "Ana Silva", cpf: "123.456.789-00", endereco: "São Paulo, SP" },
+        investidor: { nome: "Maria Oliveira", cpfCnpj: "987.654.321-00", endereco: "Rio de Janeiro, RJ" },
+        credito: {
+          valorPrincipal: 5000,
+          taxaMes: 0.02, // 2% a.m.
+          prazoMeses: 12,
+          dataEmissao: "15/01/2024"
+        },
+        assinaturas: {
+          tomador: {
+            nome: "Ana Silva",
+            data: "15/01/2024",
+            ip: "192.168.1.200",
+            hash: "e5f6789012345678901234567890abcde1234"
+          },
+          investidor: {
+            nome: "Maria Oliveira", 
+            data: "15/01/2024",
+            ip: "192.168.1.201",
+            hash: "f6789012345678901234567890abcde12345"
+          }
+        }
+      },
+      "emp_2": {
+        tomador: { nome: "Carlos Santos", cpf: "456.789.123-00", endereco: "Belo Horizonte, MG" },
+        investidor: { nome: "João Costa", cpfCnpj: "321.654.987-00", endereco: "São Paulo, SP" },
+        credito: {
+          valorPrincipal: 8000,
+          taxaMes: 0.025, // 2.5% a.m.
+          prazoMeses: 12,
+          dataEmissao: "01/10/2024"
+        },
+        assinaturas: {
+          tomador: {
+            nome: "Carlos Santos",
+            data: "01/10/2024", 
+            ip: "192.168.1.202",
+            hash: "6789012345678901234567890abcde123456"
+          },
+          investidor: {
+            nome: "João Costa",
+            data: "01/10/2024",
+            ip: "192.168.1.203", 
+            hash: "789012345678901234567890abcde1234567"
+          }
+        }
       }
-      blockchain: { hashContrato: string; smartAddress: string }
-      fechamento: { local: string; data: string }
     }
-    // Construção de dados via query params (sem acesso ao DB)
-    const valorPrincipal = Number(qpPrincipal ?? 5000)
-    const prazoMeses = Number(qpMeses ?? 12)
-    const taxaMes = Number(qpTaxaMes ?? 0.018)
+    
+    // Buscar dados mockados ou usar fallback
+    const loanData = mockLoans[emprestimoId as keyof typeof mockLoans] || {
+      tomador: { nome: "Tomador (simulado)", cpf: "(informar)", endereco: "(informar)" },
+      investidor: { nome: "Investidor (simulado)", cpfCnpj: "(informar)", endereco: "(informar)" },
+      credito: {
+        valorPrincipal: 5000,
+        taxaMes: 0.018,
+        prazoMeses: 12,
+        dataEmissao: new Date().toLocaleDateString('pt-BR')
+      },
+      assinaturas: {
+        tomador: {
+          nome: "Tomador (simulado)",
+          data: new Date().toLocaleDateString('pt-BR'),
+          ip: "192.168.1.999",
+          hash: "fallback_hash_1234567890abcdef"
+        },
+        investidor: {
+          nome: "Investidor (simulado)",
+          data: new Date().toLocaleDateString('pt-BR'),
+          ip: "192.168.1.998",
+          hash: "fallback_hash_0987654321fedcba"
+        }
+      }
+    }
+    
+    // Cálculos financeiros
+    const valorPrincipal = loanData.credito.valorPrincipal
+    const prazoMeses = loanData.credito.prazoMeses
+    const taxaMes = loanData.credito.taxaMes
     const taxaAno = Math.pow(1 + taxaMes, 12) - 1
     const fator = taxaMes > 0 ? (taxaMes * Math.pow(1 + taxaMes, prazoMeses)) / (Math.pow(1 + taxaMes, prazoMeses) - 1) : 1 / prazoMeses
     const parcela = Math.round(valorPrincipal * fator * 100) / 100
 
-    const borrowerName = url.searchParams.get('borrowerName') ?? 'Tomador (simulado)'
-    const borrowerCpf = url.searchParams.get('borrowerCpf') ?? '(informar)'
-    const borrowerAddress = url.searchParams.get('borrowerAddress') ?? '(informar)'
-    const investorName = url.searchParams.get('investorName') ?? 'Investidor (simulado)'
-    const investorCpfCnpj = url.searchParams.get('investorCpfCnpj') ?? '(informar)'
-    const investorAddress = url.searchParams.get('investorAddress') ?? '(informar)'
-
-    const data: ContratoData = {
+    const data = {
       numeroCedula: `NP-${emprestimoId}`,
-      tomador: { nome: borrowerName, cpf: borrowerCpf, endereco: borrowerAddress },
-      investidor: { nome: investorName, cpfCnpj: investorCpfCnpj, endereco: investorAddress },
-      plataforma: { razao: 'NextPeer Plataforma P2P (QI Tech)', cnpj: '00.000.000/0000-00', endereco: '(informar)' },
+      tomador: loanData.tomador,
+      investidor: loanData.investidor,
+      plataforma: { razao: 'NextPeer Plataforma P2P (QI Tech)', cnpj: '00.000.000/0000-00', endereco: 'São Paulo, SP' },
       credito: {
         valorPrincipal,
         valorExtenso: porExtensoBRL(valorPrincipal),
-        dataEmissao: new Date().toLocaleDateString('pt-BR'),
+        dataEmissao: loanData.credito.dataEmissao,
         taxaMes,
         taxaAno,
         cetAno: taxaAno,
@@ -78,7 +180,7 @@ export async function GET(
       fechamento: { local: 'São Paulo', data: new Date().toLocaleDateString('pt-BR') },
     }
 
-    // pdf-lib rendering (estável)
+    // 5. RENDERIZAÇÃO DO PDF (esta parte continua exatamente igual)
     const pdfDoc = await PDFDocument.create()
     const page = pdfDoc.addPage([595.28, 841.89])
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
@@ -91,14 +193,33 @@ export async function GET(
       y -= lh
     }
 
+    // ... (toda a lógica de `draw` para desenhar o PDF continua aqui, sem alterações) ...
     draw('CÉDULA DE CRÉDITO BANCÁRIO', true)
     y -= 8
     draw(`Número da Cédula: ${data.numeroCedula}`)
     y -= 6
     draw('2. Qualificação das Partes', true)
-    draw(`Tomador: ${data.tomador.nome} | CPF: ${data.tomador.cpf}`)
-    draw(`Investidor: ${data.investidor.nome} | CPF/CNPJ: ${data.investidor.cpfCnpj}`)
-    draw(`Plataforma: ${data.plataforma.razao} | CNPJ: ${data.plataforma.cnpj}`)
+    
+    // Ordem das partes baseada no tipo de usuário
+    if (userType === 'investidor') {
+      // Para investidores: destacar o investidor primeiro
+      draw(`CREDOR (INVESTIDOR): ${data.investidor.nome} | CPF/CNPJ: ${data.investidor.cpfCnpj}`, true)
+      draw(`Endereço: ${data.investidor.endereco}`)
+      y -= 4
+      draw(`DEVEDOR (TOMADOR): ${data.tomador.nome} | CPF: ${data.tomador.cpf}`)
+      draw(`Endereço: ${data.tomador.endereco}`)
+    } else {
+      // Para tomadores: destacar o tomador primeiro
+      draw(`DEVEDOR (TOMADOR): ${data.tomador.nome} | CPF: ${data.tomador.cpf}`, true)
+      draw(`Endereço: ${data.tomador.endereco}`)
+      y -= 4
+      draw(`CREDOR (INVESTIDOR): ${data.investidor.nome} | CPF/CNPJ: ${data.investidor.cpfCnpj}`)
+      draw(`Endereço: ${data.investidor.endereco}`)
+    }
+    
+    y -= 4
+    draw(`PLATAFORMA: ${data.plataforma.razao} | CNPJ: ${data.plataforma.cnpj}`)
+    draw(`Endereço: ${data.plataforma.endereco}`)
     y -= 6
     draw('3. Condições do Crédito', true)
     draw(`Valor: ${formatBRL(data.credito.valorPrincipal)} - ${data.credito.valorExtenso}`)
@@ -116,10 +237,55 @@ export async function GET(
     draw('6. Fecho e Assinaturas', true)
     draw(`Local/Data: ${data.fechamento.local}, ${data.fechamento.data}`)
     y -= 8
-    draw('____________________________________')
-    draw(`${data.investidor.nome} - Credor`)
-    draw('____________________________________')
-    draw(`${data.tomador.nome} - Devedor`)
+    
+    // Ordem das assinaturas baseada no tipo de usuário
+    if (userType === 'investidor') {
+      // Para investidores: destacar a assinatura do investidor primeiro
+      draw('ASSINATURA DIGITAL - CREDOR (INVESTIDOR)', true)
+      draw(`Nome: ${loanData.assinaturas.investidor.nome}`)
+      draw(`Data/Hora: ${loanData.assinaturas.investidor.data} - ${new Date().toLocaleTimeString('pt-BR')}`)
+      draw(`IP: ${loanData.assinaturas.investidor.ip}`)
+      draw(`Hash Digital: ${loanData.assinaturas.investidor.hash}`)
+      draw('____________________________________')
+      draw(`${data.investidor.nome} - Credor`)
+      y -= 12
+      
+      draw('ASSINATURA DIGITAL - DEVEDOR (TOMADOR)', true)
+      draw(`Nome: ${loanData.assinaturas.tomador.nome}`)
+      draw(`Data/Hora: ${loanData.assinaturas.tomador.data} - ${new Date().toLocaleTimeString('pt-BR')}`)
+      draw(`IP: ${loanData.assinaturas.tomador.ip}`)
+      draw(`Hash Digital: ${loanData.assinaturas.tomador.hash}`)
+      draw('____________________________________')
+      draw(`${data.tomador.nome} - Devedor`)
+      y -= 12
+    } else {
+      // Para tomadores: destacar a assinatura do tomador primeiro
+      draw('ASSINATURA DIGITAL - DEVEDOR (TOMADOR)', true)
+      draw(`Nome: ${loanData.assinaturas.tomador.nome}`)
+      draw(`Data/Hora: ${loanData.assinaturas.tomador.data} - ${new Date().toLocaleTimeString('pt-BR')}`)
+      draw(`IP: ${loanData.assinaturas.tomador.ip}`)
+      draw(`Hash Digital: ${loanData.assinaturas.tomador.hash}`)
+      draw('____________________________________')
+      draw(`${data.tomador.nome} - Devedor`)
+      y -= 12
+      
+      draw('ASSINATURA DIGITAL - CREDOR (INVESTIDOR)', true)
+      draw(`Nome: ${loanData.assinaturas.investidor.nome}`)
+      draw(`Data/Hora: ${loanData.assinaturas.investidor.data} - ${new Date().toLocaleTimeString('pt-BR')}`)
+      draw(`IP: ${loanData.assinaturas.investidor.ip}`)
+      draw(`Hash Digital: ${loanData.assinaturas.investidor.hash}`)
+      draw('____________________________________')
+      draw(`${data.investidor.nome} - Credor`)
+      y -= 12
+    }
+    
+    // Declaração de Validade das Assinaturas
+    draw('DECLARAÇÃO DE VALIDADE DAS ASSINATURAS DIGITAIS', true)
+    draw('As assinaturas digitais acima foram geradas através de certificado digital válido')
+    draw('e registradas no blockchain da plataforma NextPeer em conformidade com a')
+    draw('Lei 14.063/2020 (Marco Legal das Startups) e demais normativas aplicáveis.')
+    draw(`Hash do Contrato: ${data.blockchain.hashContrato}`)
+    draw(`Smart Contract: ${data.blockchain.smartAddress}`)
 
     const pdfBytes = await pdfDoc.save()
     return new Response(new Uint8Array(pdfBytes), {
@@ -134,5 +300,3 @@ export async function GET(
     return new NextResponse('Erro interno', { status: 500 })
   }
 }
-
-

@@ -30,6 +30,17 @@ export default function InvestorDashboard() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedInvestment, setSelectedInvestment] = useState<any>(null)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
+  const [contractOpen, setContractOpen] = useState(false)
+  const [contractLoading, setContractLoading] = useState(false)
+  const [contract, setContract] = useState<null | {
+    id: string
+    loanId: string
+    investorId: string
+    borrowerId: string
+    hashContrato: string
+    simulatedAddress: string
+    pdfUrl: string
+  }>(null)
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
 
@@ -159,6 +170,29 @@ export default function InvestorDashboard() {
   const handleViewDetails = (investment: any) => {
     setSelectedInvestment(investment)
     setShowDetailsModal(true)
+  }
+
+  const handleViewContract = async (loanId: string) => {
+    setContractLoading(true)
+    try {
+      // Usar dados mockados diretamente
+      const mockContract = {
+        id: loanId,
+        loanId: loanId,
+        investorId: 'u_maria',
+        borrowerId: 'u_ana',
+        hashContrato: `0x${Math.random().toString(16).slice(2, 42)}`,
+        simulatedAddress: `0x${Math.random().toString(16).slice(2, 42)}`,
+        pdfUrl: `/api/contracts/${loanId}/pdf?userType=investidor`
+      }
+      
+      setContract(mockContract)
+      setContractOpen(true)
+    } catch (e) {
+      console.error('Erro ao carregar contrato:', e)
+    } finally {
+      setContractLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -439,9 +473,15 @@ export default function InvestorDashboard() {
                     <Eye className="w-4 h-4 mr-2" />
                     Ver Detalhes
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewContract('1')}
+                    disabled={contractLoading}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
-                    Ver Contrato
+                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
                   </Button>
                 </div>
               </CardContent>
@@ -514,9 +554,15 @@ export default function InvestorDashboard() {
                     <Eye className="w-4 h-4 mr-2" />
                     Ver Detalhes
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewContract('1')}
+                    disabled={contractLoading}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
-                    Ver Contrato
+                    {contractLoading ? 'Carregando...' : 'Ver Contrato'}
                   </Button>
                 </div>
               </CardContent>
@@ -909,12 +955,42 @@ export default function InvestorDashboard() {
                 >
                   Fechar
                 </Button>
-                <Button className="flex-1">
+                <Button 
+                  className="flex-1"
+                  onClick={() => handleViewContract('emp_1')}
+                  disabled={contractLoading}
+                >
                   <FileText className="w-4 h-4 mr-2" />
-                  Ver Contrato Completo
+                  {contractLoading ? 'Carregando...' : 'Ver Contrato Completo'}
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do Contrato */}
+      {contractOpen && contract && (
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato (simulado)</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex justify-between"><span className="text-muted-foreground">Empréstimo</span><span className="text-foreground">{contract.loanId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Investidor</span><span className="text-foreground">{contract.investorId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Tomador</span><span className="text-foreground">{contract.borrowerId}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contract.hashContrato}</span></div>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contract.pdfUrl} className="w-full h-full" title="Contrato PDF" />
+            </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contract.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setContractOpen(false)}>Fechar</Button>
           </div>
         </div>
       )}

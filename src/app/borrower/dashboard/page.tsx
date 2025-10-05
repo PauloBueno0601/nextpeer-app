@@ -256,14 +256,14 @@ export default function BorrowerDashboard() {
       const data = await resp.json()
       if (data?.success && data.contract) {
         setContractData({
-          pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf`,
+          pdfUrl: data.contract.pdfUrl ?? `/api/contracts/${loan.id}/pdf?userType=tomador`,
           hashContrato: data.contract.hashContrato ?? '—',
           simulatedAddress: data.contract.simulatedAddress ?? '—'
         })
         setShowContractModal(true)
       } else {
         setContractData({
-          pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+          pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
           hashContrato: '—',
           simulatedAddress: '—'
         })
@@ -271,7 +271,7 @@ export default function BorrowerDashboard() {
       }
     } catch (_) {
       setContractData({
-        pdfUrl: `/api/contracts/${loan.id}/pdf?principal=${loan.amount}&prazoMeses=${loan.term}&taxaMes=${loan.interestRate / 100}`,
+        pdfUrl: `/api/contracts/${loan.id}/pdf?userType=tomador`,
         hashContrato: '—',
         simulatedAddress: '—'
       })
@@ -942,24 +942,24 @@ export default function BorrowerDashboard() {
 
       {/* Contract Modal */}
       {showContractModal && contractData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato CCB</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contractData.hashContrato}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all text-xs">{contractData.simulatedAddress}</span></div>
             </div>
-            <div className="p-6 space-y-4 text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contractData.hashContrato}</span></div>
-                <div className="flex justify-between md:col-span-2"><span className="text-muted-foreground">Smart Contract</span><span className="text-foreground break-all">{contractData.simulatedAddress}</span></div>
-              </div>
-              <div className="h-[70vh] border border-border rounded overflow-hidden">
-                <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
-              </div>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contractData.pdfUrl} className="w-full h-full" title="Contrato PDF" />
             </div>
-            <div className="p-6 border-t border-border flex justify-between">
-              <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
-              <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
-            </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contractData.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setShowContractModal(false)}>Fechar</Button>
           </div>
         </div>
       )}

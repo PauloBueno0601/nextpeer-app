@@ -44,24 +44,21 @@ export default function InvestmentsPage() {
   const handleViewContract = async (inv: typeof investments[number]) => {
     setContractLoading(true)
     try {
-      const resp = await fetch('/api/investor/contract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          loanId: inv.loanId,
-          investorId: 'u_maria',
-          principal: inv.amount,
-          monthlyRate: inv.interestRate / 100,
-          termMonths: inv.term
-        })
-      })
-      const data = await resp.json()
-      if (data?.success) {
-        setContract(data.contract)
-        setContractOpen(true)
+      // Usar dados mockados diretamente
+      const mockContract = {
+        id: inv.loanId,
+        loanId: inv.loanId,
+        investorId: 'u_maria',
+        borrowerId: 'u_ana',
+        hashContrato: `0x${Math.random().toString(16).slice(2, 42)}`,
+        simulatedAddress: `0x${Math.random().toString(16).slice(2, 42)}`,
+        pdfUrl: `/api/contracts/${inv.loanId}/pdf?userType=investidor`
       }
+      
+      setContract(mockContract)
+      setContractOpen(true)
     } catch (e) {
-      // noop MVP
+      console.error('Erro ao carregar contrato:', e)
     } finally {
       setContractLoading(false)
     }
@@ -217,25 +214,26 @@ export default function InvestmentsPage() {
       </div>
 
       {contractOpen && contract && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background border border-border rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Contrato (simulado)</h2>
-            </div>
-            <div className="p-6 space-y-4 text-sm">
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg font-semibold text-foreground">Contrato (simulado)</h2>
+          </div>
+          <div className="p-4 space-y-3 text-sm flex-shrink-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex justify-between"><span className="text-muted-foreground">Empréstimo</span><span className="text-foreground">{contract.loanId}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Investidor</span><span className="text-foreground">{contract.investorId}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Tomador</span><span className="text-foreground">{contract.borrowerId}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all">{contract.hashContrato}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Endereço (simulado)</span><span className="text-foreground break-all">{contract.simulatedAddress}</span></div>
-              <div className="h-[70vh] border border-border rounded overflow-hidden">
-                <iframe src={contract.pdfUrl} className="w-full h-full" title="Contrato PDF" />
-              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Hash</span><span className="text-foreground break-all text-xs">{contract.hashContrato}</span></div>
             </div>
-            <div className="p-6 border-t border-border flex justify-between">
-              <a href={contract.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm">Salvar PDF</a>
-              <Button onClick={() => setContractOpen(false)}>Fechar</Button>
+          </div>
+          <div className="flex-1 min-h-0 p-4">
+            <div className="h-full border border-border rounded overflow-hidden">
+              <iframe src={contract.pdfUrl} className="w-full h-full" title="Contrato PDF" />
             </div>
+          </div>
+          <div className="p-4 border-t border-border flex justify-between flex-shrink-0 bg-background">
+            <a href={contract.pdfUrl} download className="inline-flex items-center px-4 py-2 rounded-md border border-border text-sm hover:bg-muted">Salvar PDF</a>
+            <Button onClick={() => setContractOpen(false)}>Fechar</Button>
           </div>
         </div>
       )}
