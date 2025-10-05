@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useLoans } from "@/contexts/LoansContext"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -43,6 +44,7 @@ export default function InvestorDashboard() {
   }>(null)
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const { getAvailableLoans } = useLoans()
 
   // Proteção de rotas
   useEffect(() => {
@@ -66,9 +68,9 @@ export default function InvestorDashboard() {
       profileType: "INVESTOR" as const,
     },
     metrics: {
-      totalAmount: 5000,
+      totalAmount: 8000,
       averageReturn: 450,
-      activeCount: 1,
+      activeCount: 2,
     },
     notifications: [
       {
@@ -81,18 +83,20 @@ export default function InvestorDashboard() {
     ],
   }
 
-  const availableInvestments = [
-    {
-      id: "2",
-      borrower: { name: "Maria S.", score: 720 },
-      amount: 8000,
-      purpose: "Capital de giro",
-      interestRate: 2.1,
-      term: 18,
-      riskLevel: "Médio",
-      funded: 60,
+  // Obter empréstimos disponíveis do contexto
+  const availableInvestments = getAvailableLoans().map(loan => ({
+    id: loan.id,
+    borrower: { 
+      name: loan.borrower?.name || "Usuário", 
+      score: loan.borrower?.score || 750 
     },
-  ]
+    amount: loan.amount,
+    purpose: loan.purpose,
+    interestRate: loan.interestRate,
+    term: loan.term,
+    riskLevel: loan.borrower?.score && loan.borrower.score > 700 ? "Baixo" : "Médio",
+    funded: 0, // Sempre 0 para empréstimos pendentes
+  }))
 
   const myInvestments = [
     {
@@ -203,12 +207,31 @@ export default function InvestorDashboard() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Verificar se houve investimento bem-sucedido
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('invested') === 'true') {
+      // Adicionar notificação de investimento bem-sucedido
+      const newNotification = {
+        id: Date.now().toString(),
+        title: "Investimento Realizado",
+        message: "Seu investimento foi processado com sucesso!",
+        read: false,
+        createdAt: new Date(),
+      }
+      dashboardData.notifications.unshift(newNotification)
+      
+      // Limpar parâmetro da URL
+      window.history.replaceState({}, '', '/investor/dashboard')
+    }
+  }, [])
+
   const handleInvest = (loanId: string) => {
     router.push(`/investor/loan-details/${loanId}`)
   }
 
   const handleLogout = () => {
-    router.push("/")
+    router.push("/login")
   }
 
   const handleProfileClick = () => {
@@ -233,7 +256,7 @@ export default function InvestorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">

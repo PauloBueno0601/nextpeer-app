@@ -249,7 +249,7 @@ export default function ChatBot({ className }: ChatBotProps) {
           className="chatbot-button"
           size="icon"
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-7 w-7" />
         </Button>
       ) : (
         <Card className="chatbot-window">

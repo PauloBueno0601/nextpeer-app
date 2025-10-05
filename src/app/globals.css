@@ -199,11 +199,11 @@
 /* ChatBot specific styles */
 @layer components {
   .chatbot-container {
-    @apply fixed bottom-4 right-4 z-50;
+    @apply fixed bottom-20 right-4 z-40;
   }
   
   .chatbot-button {
-    @apply h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300 hover:scale-105;
+    @apply h-16 w-16 rounded-full bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300 hover:scale-105;
   }
   
   .chatbot-window {
@@ -249,7 +249,7 @@
     }
     
     .chatbot-container {
-      @apply bottom-2 right-2;
+      @apply bottom-16 right-2;
     }
   }
   

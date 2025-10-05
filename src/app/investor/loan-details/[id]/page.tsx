@@ -2,74 +2,59 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
+import { useLoans } from "@/contexts/LoansContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, DollarSign, Clock, User, TrendingUp, FileText } from "lucide-react"
+import {
+  ArrowLeft,
+  DollarSign,
+  Clock,
+  User,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  Target
+} from "lucide-react"
 
 export default function LoanDetailsPage() {
-  const [loading, setLoading] = useState(true)
-  const [investing, setInvesting] = useState(false)
-  const [investmentAmount, setInvestmentAmount] = useState("")
   const router = useRouter()
   const params = useParams()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const { loans, updateLoan } = useLoans()
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
+  const [isInvesting, setIsInvesting] = useState(false)
+  const [loan, setLoan] = useState<any>(null)
 
-  const loanData = {
-    id: params.id,
-    borrowerName: "Ana C.",
-    borrowerScore: 780,
-    amount: 5000,
-    purpose: "Reforma da minha loja de artesanato",
-    interestRate: 1.8,
-    term: 12,
-    riskLevel: "Baixo",
-    funded: 100,
-    availableAmount: 0,
-    monthlyIncome: 8000,
-    profession: "Artesã",
-    employmentStatus: "Autônoma",
-    creditScore: 780,
-    monthlyPayment: 506.90,
-    totalAmount: 6082.80,
-    expectedReturn: 1082.80,
-    description: "Ana é uma artesã experiente que precisa de capital para reformar sua loja e expandir seus negócios. Ela possui um histórico de pagamentos impecável e uma renda estável."
-  }
-
+  // Proteção de rotas
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handleInvest = async () => {
-    if (!investmentAmount || parseFloat(investmentAmount) <= 0) return
-
-    setInvesting(true)
-    try {
-      // Simula processo de investimento
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Aqui você integraria com o InvestmentController
-      // const result = await InvestmentController.createInvestment(
-      //   userId, 
-      //   loanData.id, 
-      //   parseFloat(investmentAmount)
-      // )
-      
-      router.push("/investor/contract-confirmation")
-    } catch (error) {
-      console.error("Erro ao investir:", error)
-    } finally {
-      setInvesting(false)
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login")
     }
-  }
+  }, [isAuthenticated, authLoading, router])
 
-  if (loading) {
+  // Redirecionar se não for investidor
+  useEffect(() => {
+    if (user && user.profileType !== "INVESTOR") {
+      router.push("/borrower/dashboard")
+    }
+  }, [user, router])
+
+  // Buscar empréstimo específico
+  useEffect(() => {
+    if (params.id && loans.length > 0) {
+      const foundLoan = loans.find(l => l.id === params.id)
+      if (foundLoan) {
+        setLoan(foundLoan)
+      } else {
+        router.push("/investor/dashboard")
+      }
+    }
+  }, [params.id, loans, router])
+
+  if (authLoading || !loan) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -80,220 +65,296 @@ export default function LoanDetailsPage() {
     )
   }
 
+  if (!isAuthenticated) {
+    return null
+  }
+
+  // Calcular valores de investimento possíveis
+  const calculateInvestmentOptions = (totalAmount: number) => {
+    const options = []
+    
+    // Opção 1: 25% do valor total
+    const option1 = Math.round(totalAmount * 0.25)
+    if (option1 >= 100) {
+      options.push({
+        value: option1,
+        percentage: 25,
+        label: "25% do empréstimo",
+        description: "Investimento conservador"
+      })
+    }
+
+    // Opção 2: 50% do valor total
+    const option2 = Math.round(totalAmount * 0.5)
+    if (option2 >= 100) {
+      options.push({
+        value: option2,
+        percentage: 50,
+        label: "50% do empréstimo",
+        description: "Investimento moderado"
+      })
+    }
+
+    // Opção 3: 75% do valor total
+    const option3 = Math.round(totalAmount * 0.75)
+    if (option3 >= 100) {
+      options.push({
+        value: option3,
+        percentage: 75,
+        label: "75% do empréstimo",
+        description: "Investimento arrojado"
+      })
+    }
+
+    // Opção 4: 100% do valor total
+    options.push({
+      value: totalAmount,
+      percentage: 100,
+      label: "100% do empréstimo",
+      description: "Financiamento completo"
+    })
+
+    return options
+  }
+
+  const investmentOptions = calculateInvestmentOptions(loan.amount)
+
+  const handleInvest = async () => {
+    if (!selectedAmount) return
+
+    setIsInvesting(true)
+    
+    try {
+      // Simular processamento
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Atualizar o empréstimo com o investimento
+      const newProgress = Math.round((selectedAmount / loan.amount) * 100)
+      const newStatus = newProgress === 100 ? "Aprovado" : "Parcialmente Financiado"
+      
+      updateLoan(loan.id, {
+        progress: newProgress,
+        status: newStatus,
+        monthlyPayment: selectedAmount * (loan.interestRate / 100),
+        totalAmount: selectedAmount + (selectedAmount * (loan.interestRate / 100) * loan.term)
+      })
+
+      // Redirecionar para dashboard com sucesso
+      router.push("/investor/dashboard?invested=true")
+    } catch (error) {
+      console.error("Erro ao investir:", error)
+    } finally {
+      setIsInvesting(false)
+    }
+  }
+
+  const expectedReturn = selectedAmount 
+    ? selectedAmount * (loan.interestRate / 100) * loan.term 
+    : 0
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="w-10 h-10"
+            size="sm"
+            onClick={() => router.push("/investor/dashboard")}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Detalhes do Empréstimo</h1>
-            <p className="text-sm text-muted-foreground">Informações completas para investimento</p>
+            <h1 className="text-xl font-semibold text-foreground">Detalhes do Empréstimo</h1>
+            <p className="text-sm text-muted-foreground">Escolha quanto deseja investir</p>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header Card */}
+      <div className="px-6 py-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Informações do Empréstimo */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-primary font-semibold text-lg">
-                      {loanData.borrowerName[0]}
-                    </span>
+              <CardTitle className="flex items-center space-x-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <span>Informações do Empréstimo</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor Solicitado</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    R$ {loan.amount.toLocaleString()}
+                  </p>
                 </div>
                 <div>
-                    <CardTitle className="text-xl">{loanData.borrowerName}</CardTitle>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">Score de Crédito</span>
-                      <Badge className="bg-green-100 text-green-800">
-                        {loanData.borrowerScore}
-                      </Badge>
-                    </div>
-                  </div>
+                  <p className="text-sm text-muted-foreground">Finalidade</p>
+                  <p className="text-sm font-medium text-foreground">{loan.purpose}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-foreground">
-                    R$ {loanData.amount.toLocaleString()}
-                  </p>
-                  <Badge 
-                    variant={loanData.riskLevel === "Baixo" ? "default" : 
-                            loanData.riskLevel === "Médio" ? "secondary" : "destructive"}
-                  >
-                    Risco {loanData.riskLevel}
-                  </Badge>
+                <div>
+                  <p className="text-sm text-muted-foreground">Taxa de Juros</p>
+                  <p className="text-sm font-medium text-foreground">{loan.interestRate}% a.m.</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Prazo</p>
+                  <p className="text-sm font-medium text-foreground">{loan.term} meses</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{loanData.description}</p>
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Progresso de Financiamento</span>
+                  <span className="font-medium">{loan.progress}%</span>
+                </div>
+                <Progress value={loan.progress} />
+              </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Loan Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="w-5 h-5" />
-                  <span>Detalhes do Empréstimo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+          {/* Informações do Tomador */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <User className="w-5 h-5 text-primary" />
+                <span>Informações do Tomador</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-primary font-semibold text-lg">
+                    {loan.borrower?.name?.[0] || "U"}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">
+                    {loan.borrower?.name || "Usuário"}
+                  </h3>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Taxa de Juros</p>
-                      <p className="font-semibold">{loanData.interestRate}% a.m.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Prazo</p>
-                      <p className="font-semibold">{loanData.term} meses</p>
-                    </div>
+                    <span className="text-sm text-muted-foreground">Score</span>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                      {loan.borrower?.score || 750}
+                    </Badge>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Parcela Mensal</span>
-                    <span className="font-semibold">R$ {loanData.monthlyPayment.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total a Pagar</span>
-                    <span className="font-semibold">R$ {loanData.totalAmount.toLocaleString()}</span>
               </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Juros Totais</span>
-                    <span className="font-semibold text-green-600">R$ {loanData.expectedReturn.toLocaleString()}</span>
-              </div>
-            </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progresso de Financiamento</span>
-                    <span className="font-semibold">{loanData.funded}%</span>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {loan.borrower?.email || "usuario@nexpeer.com"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Nível de Risco</p>
+                  <Badge variant="outline" className={
+                    (loan.borrower?.score || 750) > 700 
+                      ? "bg-green-100 text-green-700" 
+                      : "bg-yellow-100 text-yellow-700"
+                  }>
+                    {(loan.borrower?.score || 750) > 700 ? "Baixo" : "Médio"}
+                  </Badge>
+                </div>
               </div>
-                  <Progress value={loanData.funded} />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Borrower Information */}
-            <Card>
+        {/* Opções de Investimento */}
+        <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-                  <User className="w-5 h-5" />
-                  <span>Informações do Tomador</span>
+              <Target className="w-5 h-5 text-primary" />
+              <span>Escolha o Valor do Investimento</span>
             </CardTitle>
           </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Profissão</p>
-                    <p className="font-semibold">{loanData.profession}</p>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {investmentOptions.map((option, index) => (
+                <div
+                  key={index}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    selectedAmount === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedAmount(option.value)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-foreground">
+                      R$ {option.value.toLocaleString()}
+                    </h3>
+                    <Badge variant={selectedAmount === option.value ? "default" : "outline"}>
+                      {option.percentage}%
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Situação Profissional</p>
-                    <p className="font-semibold">{loanData.employmentStatus}</p>
+                  <p className="text-sm text-muted-foreground mb-1">{option.label}</p>
+                  <p className="text-xs text-muted-foreground">{option.description}</p>
                 </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Renda Mensal</p>
-                    <p className="font-semibold">R$ {loanData.monthlyIncome.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Score de Crédito</p>
-                    <p className="font-semibold text-green-600">{loanData.creditScore}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-              </div>
-
-          {/* Investment Section */}
-          {loanData.funded < 100 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5" />
-                  <span>Investir neste Empréstimo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Valor do Investimento (R$)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      min="0"
-                      placeholder="Ex: 1000"
-                      value={investmentAmount}
-                      onChange={(e) => setInvestmentAmount(e.target.value)}
-                      max={loanData.availableAmount}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Disponível: R$ {loanData.availableAmount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Retorno Esperado</Label>
-                    <div className="p-3 bg-muted/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Em {loanData.term} meses</p>
-                      <p className="text-lg font-bold text-green-600">
-                        R$ {investmentAmount ? 
-                          (parseFloat(investmentAmount) * Math.pow(1 + loanData.interestRate/100, loanData.term) - parseFloat(investmentAmount)).toFixed(2) 
-                          : "0,00"}
-                      </p>
-              </div>
-              </div>
+              ))}
             </div>
 
-                <Button
-                  onClick={handleInvest}
-                  disabled={!investmentAmount || parseFloat(investmentAmount) <= 0 || investing}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  {investing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Investir R$ {investmentAmount || "0"}
-                    </>
-                  )}
-                </Button>
-          </CardContent>
-        </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="w-8 h-8 text-green-600" />
+            {/* Resumo do Investimento */}
+            {selectedAmount && (
+              <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-foreground mb-4">Resumo do Investimento</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor a Investir</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      R$ {selectedAmount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Retorno Esperado</p>
+                    <p className="text-lg font-semibold text-green-600">
+                      R$ {expectedReturn.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Taxa Mensal</p>
+                    <p className="text-sm font-medium text-foreground">{loan.interestRate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Prazo</p>
+                    <p className="text-sm font-medium text-foreground">{loan.term} meses</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Empréstimo 100% Financiado</h3>
-                <p className="text-muted-foreground">
-                  Este empréstimo já foi totalmente financiado por outros investidores.
-                </p>
+              </div>
+            )}
+
+            {/* Botão de Investir */}
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/investor/dashboard")}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleInvest}
+                disabled={!selectedAmount || isInvesting}
+                className="min-w-[120px]"
+              >
+                {isInvesting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Investir
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
-          )}
-        </div>
       </div>
     </div>
   )
