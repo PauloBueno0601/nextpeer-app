@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/database'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,12 +46,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Validação de CPF (formato básico)
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/
-    if (!cpfRegex.test(cpfRepresentante)) {
+    // Validação de CPF (aceita formato ou apenas números)
+    const cpfLimpo = cpfRepresentante.replace(/\D/g, '')
+    if (cpfLimpo.length !== 11) {
       return NextResponse.json({ 
         success: false, 
-        error: 'CPF deve estar no formato 000.000.000-00' 
+        error: 'CPF deve ter 11 dígitos' 
       }, { status: 400 })
     }
 
@@ -61,32 +63,118 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Simular criação de usuário (sem banco de dados)
-    const usuario = {
-      id: `empresa_${Date.now()}`,
-      email,
-      cnpj,
-      nome: razaoSocial,
-      razaoSocial,
-      nomeFantasia,
-      telefone,
-      tipoPerfil: tipoPerfil || 'INVESTOR',
-      tipoPessoa: tipoPessoa || 'JURIDICA',
-      statusKyc: 'PENDENTE'
+    // Verificar se email já existe
+    const existingUser = await prisma.usuario.findUnique({
+      where: { email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, error: 'Email já cadastrado' },
+        { status: 400 }
+      )
     }
 
-    console.log('Empresa cadastrada:', usuario)
+    // Verificar se CNPJ já existe
+    const existingCNPJ = await prisma.usuario.findUnique({
+      where: { cnpj }
+    })
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Conta empresa criada com sucesso',
-      usuario: {
-        id: usuario.id,
-        email: usuario.email,
-        nome: usuario.nome,
-        tipoPerfil: usuario.tipoPerfil,
-        tipoPessoa: usuario.tipoPessoa
+    if (existingCNPJ) {
+      return NextResponse.json(
+        { success: false, error: 'CNPJ já cadastrado' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se CPF do representante já existe
+    const existingCPF = await prisma.usuario.findUnique({
+      where: { cpf: cpfLimpo }
+    })
+
+    if (existingCPF) {
+      return NextResponse.json(
+        { success: false, error: 'CPF do representante já cadastrado' },
+        { status: 400 }
+      )
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(senha, 12)
+
+    // Criar usuário empresa
+    const user = await prisma.usuario.create({
+      data: {
+        nome: razaoSocial,
+        sobrenome: nomeRepresentante, // Sobrenome obrigatório
+        email,
+        senhaHash: hashedPassword,
+        cpf: cpfLimpo, // CPF do representante obrigatório (sem formatação)
+        cnpj,
+        razaoSocial,
+        nomeFantasia,
+        telefone,
+        tipoPerfil: tipoPerfil || 'INVESTOR',
+        tipoPessoa: 'JURIDICA'
+      },
+      select: {
+        id: true,
+        email: true,
+        nome: true,
+        cnpj: true,
+        razaoSocial: true,
+        nomeFantasia: true,
+        telefone: true,
+        tipoPerfil: true,
+        tipoPessoa: true,
+        statusKyc: true,
+        criadoEm: true
       }
+    })
+
+    // Criar perfil específico baseado no tipo
+    if (tipoPerfil === 'TOMADOR') {
+      await prisma.perfilTomador.create({
+        data: {
+          usuarioId: user.id,
+          scoreCredito: Math.floor(Math.random() * 200) + 600,
+          limiteCredito: 100000 // Limite maior para empresas
+        }
+      })
+    } else {
+      await prisma.perfilInvestidor.create({
+        data: {
+          usuarioId: user.id,
+          perfilRisco: 'MODERADO'
+        }
+      })
+    }
+
+    // Log da ação
+    await prisma.logAcao.create({
+      data: {
+        usuarioId: user.id,
+        acao: 'registro_empresa',
+        descricao: 'Empresa se registrou no sistema',
+        ipOrigem: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        nome: user.nome,
+        cnpj: user.cnpj,
+        razaoSocial: user.razaoSocial,
+        nomeFantasia: user.nomeFantasia,
+        telefone: user.telefone,
+        tipoPerfil: user.tipoPerfil,
+        tipoPessoa: user.tipoPessoa,
+        statusKyc: user.statusKyc
+      },
+      token: Buffer.from(`${user.id}:${Date.now()}`).toString('base64')
     })
 
   } catch (error) {

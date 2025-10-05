@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         senhaHash: hashedPassword,
         cpf,
         telefone: phone,
-        tipoPerfil: profileType as 'TOMADOR' | 'INVESTIDOR'
+        tipoPerfil: profileType
       },
       select: {
         id: true,

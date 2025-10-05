@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NexPeer - Plataforma de Empréstimos P2P
 
-## Getting Started
+Uma plataforma de empréstimos peer-to-peer desenvolvida com Next.js 14, TypeScript e Prisma.
 
-First, run the development server:
+## Tecnologias
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Banco de Dados**: PostgreSQL (Supabase)
+- **Autenticação**: JWT personalizado
+- **UI**: Radix UI, Shadcn/ui
+
+##  Funcionalidades
+
+-  Cadastro de usuários individuais
+-  Cadastro de empresas
+-  Sistema de autenticação
+-  Dashboard para investidores e tomadores
+-  Análise de crédito
+-  Sistema de contratos
+-  Verificação de identidade
+
+##  Instalação
+
+1. Clone o repositório
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Configure as variáveis de ambiente:
+   ```bash
+   DATABASE_URL="sua_url_do_banco"
+   JWT_SECRET="seu_jwt_secret"
+   ```
+
+4. Execute as migrações:
+   ```bash
+   npx prisma db push
+   npx prisma generate
+   ```
+
+5. Inicie o servidor:
+   ```bash
+   npm run dev
+   ```
+
+##  Estrutura do Projeto
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API Routes
+│   ├── borrower/          # Páginas do tomador
+│   ├── investor/          # Páginas do investidor
+│   └── company/           # Páginas da empresa
+├── components/            # Componentes React
+├── lib/                   # Utilitários e configurações
+├── hooks/                 # Custom hooks
+└── types/                 # Definições TypeScript
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+##  Scripts Disponíveis
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Constrói a aplicação para produção
+- `npm run start` - Inicia o servidor de produção
+- `npx prisma studio` - Abre o Prisma Studio
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+##  Banco de Dados
 
-## Learn More
+O projeto utiliza PostgreSQL com Prisma ORM. O schema está definido em `prisma/schema.prisma`.
 
-To learn more about Next.js, take a look at the following resources:
+### Principais Tabelas:
+- `usuarios` - Usuários do sistema
+- `emprestimos` - Solicitações de empréstimo
+- `investimentos` - Investimentos realizados
+- `contratos_ccb` - Contratos CCB
+- `perfil_tomador` - Perfil do tomador
+- `perfil_investidor` - Perfil do investidor
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+##  Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para fazer deploy em produção:
 
-## Deploy on Vercel
+1. Configure as variáveis de ambiente no servidor
+2. Execute `npm run build`
+3. Inicie com `npm run start`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+##  Licença
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este projeto está sob a licença MIT.
