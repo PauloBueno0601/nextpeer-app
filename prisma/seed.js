@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
 
@@ -29,8 +30,8 @@ async function main() {
       sobrenome: 'Silva',
       email: 'ana@nexpeer.com',
       senhaHash: hashedPassword,
-      cpf: '123.456.789-00',
-      telefone: '(11) 99999-9999',
+      cpf: '12345678900',
+      telefone: '11999999999',
       tipoPerfil: 'TOMADOR',
       statusKyc: 'APROVADO'
     }
@@ -43,8 +44,8 @@ async function main() {
       sobrenome: 'Santos',
       email: 'carlos@nexpeer.com',
       senhaHash: hashedPassword,
-      cpf: '987.654.321-00',
-      telefone: '(11) 88888-8888',
+      cpf: '98765432100',
+      telefone: '11888888888',
       tipoPerfil: 'TOMADOR',
       statusKyc: 'APROVADO'
     }
@@ -57,8 +58,8 @@ async function main() {
       sobrenome: 'Oliveira',
       email: 'maria@nexpeer.com',
       senhaHash: hashedPassword,
-      cpf: '456.789.123-00',
-      telefone: '(11) 77777-7777',
+      cpf: '45678912300',
+      telefone: '11777777777',
       tipoPerfil: 'INVESTIDOR',
       statusKyc: 'APROVADO'
     }
@@ -71,8 +72,8 @@ async function main() {
       sobrenome: 'Costa',
       email: 'joao@nexpeer.com',
       senhaHash: hashedPassword,
-      cpf: '789.123.456-00',
-      telefone: '(11) 66666-6666',
+      cpf: '78912345600',
+      telefone: '11666666666',
       tipoPerfil: 'INVESTIDOR',
       statusKyc: 'APROVADO'
     }

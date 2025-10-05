@@ -15,8 +15,10 @@ export async function POST(request: NextRequest) {
 
     // Conectar ao PostgreSQL (Supabase) diretamente (evita dependência do Prisma Client)
     const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_URL?.includes('supabase.com') ? { rejectUnauthorized: false } : undefined
+      connectionString: "postgresql://postgres.brkpqghnsaydripywndf:bbgnexpeer@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000
     })
     await client.connect()
 
