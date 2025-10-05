@@ -1,9 +1,11 @@
+// Interface para transações financeiras
 export interface Transaction {
   date: string;
   description: string;
   amount: number;
 }
 
+// Interface para contas bancárias
 export interface Account {
   accountId: string;
   accountType: 'checking' | 'credit_card';
@@ -11,6 +13,7 @@ export interface Account {
   transactions: Transaction[];
 }
 
+// Interface para dados de Open Finance por usuário
 export interface UserOpenFinanceData {
   [userId: string]: {
     name: string;
@@ -18,8 +21,9 @@ export interface UserOpenFinanceData {
   };
 }
 
-// Associamos os IDs '1' e '2' aos seus tomadores Ana e Carlos
-// O ID '3' é um bônus para demonstrar o perfil médio
+// Dados simulados de Open Finance para demonstração
+// IDs '1' e '2' correspondem aos tomadores Ana e Carlos
+// ID '3' demonstra perfil médio
 export const openFinanceData: UserOpenFinanceData = {
   // ANA SILVA (ID '1') - Perfil de Baixo Risco
   "1": {

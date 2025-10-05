@@ -1,16 +1,19 @@
 import type { Transaction } from './open-finance-data';
 
+// Interface para resultado do score dinâmico
 export interface ScoreResult {
   dynamicScore: number;
   positiveIndicators: string[];
   negativeIndicators: string[];
 }
 
+// Motor de scoring dinâmico baseado em transações Open Finance
 export function calculateDynamicScore(transactions: Transaction[]): ScoreResult {
   let score = 500;
   const positiveIndicators: string[] = [];
   const negativeIndicators: string[] = [];
 
+  // Calcula fluxo de caixa
   const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + t.amount, 0);
   const totalExpenses = transactions.filter(t => t.amount < 0).reduce((acc, t) => acc + t.amount, 0);
   const cashFlow = totalIncome + totalExpenses;
@@ -50,8 +53,10 @@ export function calculateDynamicScore(transactions: Transaction[]): ScoreResult 
      positiveIndicators.push("Bom histórico de pagamento da fatura do cartão.");
   }
 
-  score = Math.max(300, Math.min(950, score)); // Limita o score
+  // Limita score entre 300 e 950
+  score = Math.max(300, Math.min(950, score));
 
+  // Adiciona indicadores padrão se não houver nenhum
   if (negativeIndicators.length === 0) {
     negativeIndicators.push("Nenhum indicador de risco relevante encontrado.");
   }

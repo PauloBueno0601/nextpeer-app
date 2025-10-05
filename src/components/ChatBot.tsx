@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { MessageCircle, X, Send, Bot, User, ShieldAlert, TrendingUp, Banknote, Lightbulb, Lock, Percent } from 'lucide-react';
 
-// Tipagem para as mensagens do chat
+// Interface para mensagens do chat
 interface Message {
   id: string;
   text: string;
@@ -17,12 +17,12 @@ interface Message {
   theme?: string;
 }
 
-// Tipagem para as props do componente (apenas className, opcional)
+// Interface para propriedades do componente ChatBot
 interface ChatBotProps {
   className?: string;
 }
 
-// ESTRUTURA DE TEMAS E PERGUNTAS
+// Estrutura de temas e perguntas do chatbot
 const THEMES = {
   'inadimplencia': {
     title: 'Inadimplência',
@@ -123,6 +123,7 @@ const THEMES = {
 };
 
 
+// Componente principal do chatbot
 export default function ChatBot({ className }: ChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -138,15 +139,17 @@ export default function ChatBot({ className }: ChatBotProps) {
   const [currentTheme, setCurrentTheme] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // >>> INÍCIO DA LÓGICA DO CHAT (SEU CÓDIGO) <<<
+  // Função para rolar para o final das mensagens
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Efeito para rolar automaticamente quando novas mensagens são adicionadas
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Mostra seleção de temas
   const showThemeSelection = () => {
     const themeMessage: Message = {
       id: Date.now().toString(),
@@ -159,6 +162,7 @@ export default function ChatBot({ className }: ChatBotProps) {
     setCurrentTheme(null);
   };
   
+  // Manipula seleção de tema
   const handleThemeSelection = (themeKey: string) => {
     const theme = THEMES[themeKey as keyof typeof THEMES];
     if (!theme) return;
@@ -176,6 +180,7 @@ export default function ChatBot({ className }: ChatBotProps) {
     setCurrentTheme(themeKey);
   };
 
+  // Manipula seleção de pergunta
   const handleQuestionSelection = (questionIndex: number) => {
     if (!currentTheme) return;
     
@@ -193,11 +198,13 @@ export default function ChatBot({ className }: ChatBotProps) {
     
     setMessages(prev => [...prev, answerMessage]);
     
+    // Volta para seleção de temas após 1 segundo
     setTimeout(() => {
       showThemeSelection();
     }, 1000);
   };
 
+  // Manipula entrada não reconhecida
   const handleUnknownInput = () => {
     const unknownMessage: Message = {
       id: Date.now().toString(),
@@ -213,6 +220,7 @@ export default function ChatBot({ className }: ChatBotProps) {
     }, 1000);
   };
 
+  // Envia mensagem do usuário
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
@@ -226,18 +234,19 @@ export default function ChatBot({ className }: ChatBotProps) {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
 
+    // Responde com entrada não reconhecida
     setTimeout(() => {
       handleUnknownInput();
     }, 1000);
   };
 
+  // Manipula tecla Enter para enviar mensagem
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
-  // >>> FIM DA LÓGICA DO CHAT <<<
 
 
 

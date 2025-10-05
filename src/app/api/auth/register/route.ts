@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import bcrypt from 'bcryptjs'
 
+// Rota de registro - cria novo usuário no sistema
 export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, email, password, cpf, phone, profileType } = await request.json()
 
-    // Validações
+    // Validação de campos obrigatórios
     if (!firstName || !lastName || !email || !password || !cpf || !phone || !profileType) {
       return NextResponse.json(
         { success: false, error: 'Todos os campos são obrigatórios' },
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validação de senha
     if (password.length < 6) {
       return NextResponse.json(
         { success: false, error: 'Senha deve ter pelo menos 6 caracteres' },
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar se email já existe
+    // Verifica se email já existe
     const existingUser = await prisma.usuario.findUnique({
       where: { email }
     })
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar se CPF já existe
+    // Verifica se CPF já existe
     const existingCPF = await prisma.usuario.findUnique({
       where: { cpf }
     })
@@ -45,10 +47,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash da senha
+    // Criptografa senha com bcrypt
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Criar usuário
+    // Cria usuário no banco de dados
     const user = await prisma.usuario.create({
       data: {
         nome: firstName,
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Criar perfil específico baseado no tipo
+    // Cria perfil específico baseado no tipo de usuário
     if (profileType === 'TOMADOR') {
       await prisma.perfilTomador.create({
         data: {
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Log da ação
+    // Registra log de registro
     await prisma.logAcao.create({
       data: {
         usuarioId: user.id,
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Retorna dados do usuário criado e token
     return NextResponse.json({
       success: true,
       user: {

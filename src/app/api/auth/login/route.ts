@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { Client } from 'pg'
 
+// Rota de login - autentica usuário no sistema
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
 
+    // Validação de campos obrigatórios
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: 'Email e senha são obrigatórios' },
@@ -13,7 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Conectar ao PostgreSQL (Supabase) diretamente (evita dependência do Prisma Client)
+    // Conecta ao PostgreSQL (Supabase) diretamente
     const client = new Client({
       connectionString: "postgresql://postgres.brkpqghnsaydripywndf:bbgnexpeer@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
       ssl: { rejectUnauthorized: false },
@@ -21,6 +23,7 @@ export async function POST(request: NextRequest) {
     })
     await client.connect()
 
+    // Busca usuário por email
     const { rows } = await client.query(
       `SELECT 
          id,
@@ -39,6 +42,7 @@ export async function POST(request: NextRequest) {
     )
     const user = rows[0]
 
+    // Verifica se usuário existe
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Credenciais inválidas' },
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar senha
+    // Verifica senha usando bcrypt
     const isValidPassword = await bcrypt.compare(password, user.senhaHash)
     if (!isValidPassword) {
       return NextResponse.json(
@@ -55,10 +59,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Remover senha da resposta e formatar dados
+    // Remove senha da resposta por segurança
     const { senhaHash: _, ...userWithoutPassword } = user
 
-    // Log da ação
+    // Registra log de login
     try {
       await client.query(
         `INSERT INTO logs_acoes (id, usuario_id, acao, descricao, ip_origem, criado_em)
@@ -74,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     await client.end()
 
+    // Retorna dados do usuário e token de autenticação
     return NextResponse.json({
       success: true,
       user: {

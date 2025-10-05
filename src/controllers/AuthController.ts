@@ -1,11 +1,13 @@
 import { type User } from "@/types"
 import { UserModel } from "@/models/User"
 
+// Interface para credenciais de login
 export interface LoginCredentials {
   email: string
   password: string
 }
 
+// Interface para dados de cadastro, estendendo LoginCredentials
 export interface SignupData extends LoginCredentials {
   name: string
   cpf: string
@@ -14,9 +16,12 @@ export interface SignupData extends LoginCredentials {
   profileType: "BORROWER" | "INVESTOR"
 }
 
+// Controlador responsável por autenticação e autorização de usuários
 export class AuthController {
+  // Realiza login do usuário com email e senha
   static async login(credentials: LoginCredentials): Promise<{ user: User; token: string } | null> {
     try {
+      // Faz requisição para API de login
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -27,10 +32,12 @@ export class AuthController {
 
       const data = await response.json()
       
+      // Verifica se login foi bem-sucedido
       if (!data.success) {
         return null
       }
 
+      // Retorna dados do usuário e token de autenticação
       return {
         user: {
           id: data.user.id,
@@ -53,8 +60,10 @@ export class AuthController {
     }
   }
 
+  // Realiza cadastro de novo usuário
   static async signup(data: SignupData): Promise<{ user: User; token: string }> {
     try {
+      // Faz requisição para API de cadastro
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -72,10 +81,12 @@ export class AuthController {
 
       const result = await response.json()
       
+      // Verifica se cadastro foi bem-sucedido
       if (!result.success) {
         throw new Error(result.error || 'Erro no cadastro')
       }
 
+      // Retorna dados do usuário cadastrado e token
       return {
         user: {
           id: result.user.id,
@@ -98,6 +109,7 @@ export class AuthController {
     }
   }
 
+  // Busca dados do usuário atual usando token de autenticação
   static async getCurrentUser(token: string): Promise<User | null> {
     try {
       const response = await fetch('/api/user/profile', {
@@ -116,6 +128,7 @@ export class AuthController {
         return null
       }
 
+      // Retorna dados do usuário autenticado
       return {
         id: data.user.id,
         email: data.user.email,
@@ -135,15 +148,17 @@ export class AuthController {
     }
   }
 
+  // Função obsoleta - não é mais necessária com integração do banco
   static getUserByEmail(email: string): User | null {
-    // Esta função não é mais necessária com a integração do banco
     return null
   }
 
+  // Verifica se usuário é investidor
   static isInvestor(user: User): boolean {
     return user.profileType === "INVESTOR"
   }
 
+  // Verifica se usuário é tomador de empréstimo
   static isBorrower(user: User): boolean {
     return user.profileType === "BORROWER"
   }

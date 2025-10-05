@@ -1,22 +1,24 @@
+// Interface para empréstimo
 export interface Loan {
   id: string
   borrowerId: string
   borrowerName: string
   amount: number
   interestRate: number
-  term: number // months
+  term: number // meses
   purpose: string
   status: "pending" | "funding" | "active" | "completed" | "defaulted"
   creditScore: number
   monthlyIncome: number
   profession: string
-  fundingProgress: number // percentage
+  fundingProgress: number // percentual
   fundedAmount: number
   investors: LoanInvestor[]
   createdAt: Date
   updatedAt: Date
 }
 
+// Interface para investidor em empréstimo
 export interface LoanInvestor {
   investorId: string
   investorName: string
@@ -24,6 +26,7 @@ export interface LoanInvestor {
   investedAt: Date
 }
 
+// Interface para parcela de empréstimo
 export interface LoanInstallment {
   id: string
   loanId: string
@@ -34,12 +37,15 @@ export interface LoanInstallment {
   status: "pending" | "paid" | "overdue"
 }
 
+// Classe modelo para operações com empréstimos
 export class LoanModel {
+  // Calcula valor da parcela mensal
   static calculateMonthlyPayment(amount: number, rate: number, term: number): number {
     const monthlyRate = rate / 100 / 12
     return (amount * monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1)
   }
 
+  // Gera parcelas do empréstimo
   static generateInstallments(loan: Loan): LoanInstallment[] {
     const monthlyPayment = this.calculateMonthlyPayment(loan.amount, loan.interestRate, loan.term)
     const installments: LoanInstallment[] = []
@@ -61,6 +67,7 @@ export class LoanModel {
     return installments
   }
 
+  // Calcula nível de risco do empréstimo
   static calculateRisk(creditScore: number, monthlyIncome: number, requestedAmount: number): "low" | "medium" | "high" {
     const incomeRatio = requestedAmount / monthlyIncome
 
