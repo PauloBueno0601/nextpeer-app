@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
-// Importa a "forma" dos dados que esperamos receber da nossa API
-// para garantir que o TypeScript nos ajude
+// Interface para dados do score dinâmico
 interface ScoreData {
   userId: string;
   name: string;
@@ -14,18 +13,19 @@ interface ScoreData {
   negativeIndicators: string[];
 }
 
-// Define que nosso componente receberá um 'userId' como propriedade
+// Interface para propriedades do componente
 interface DynamicScoreCardProps {
   userId: string;
 }
 
+// Componente para exibir score dinâmico do usuário
 export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Função para buscar os dados do score na nossa API
+    // Função para buscar dados do score na API
     async function fetchScore() {
       try {
         setLoading(true);
@@ -46,11 +46,9 @@ export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
     }
 
     fetchScore();
-  }, [userId]); // O useEffect roda novamente se o userId mudar
+  }, [userId]); // Executa novamente se userId mudar
 
-  // ---- RENDERIZAÇÃO DE ESTADOS ----
-
-  // Estado de Carregamento
+  // Estado de carregamento
   if (loading) {
     return (
       <Card className="flex items-center justify-center p-6 min-h-[200px]">
@@ -62,7 +60,7 @@ export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
     );
   }
 
-  // Estado de Erro
+  // Estado de erro
   if (error || !scoreData) {
     return (
       <Card className="p-6 bg-destructive/10 border-destructive/50">
@@ -75,14 +73,12 @@ export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
     );
   }
 
-  // Função para definir a cor do score
+  // Função para definir cor do score baseado no valor
   const getScoreColor = (score: number) => {
     if (score >= 750) return 'text-emerald-500';
     if (score >= 550) return 'text-yellow-500';
     return 'text-red-500';
   };
-
-  // ---- RENDERIZAÇÃO DE SUCESSO ----
 
   return (
     <Card className="shadow-md">
@@ -95,7 +91,7 @@ export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Seção de Pontos Fortes */}
+        {/* Seção de indicadores positivos */}
         <div>
           <h4 className="font-semibold text-emerald-500 mb-2 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
@@ -110,7 +106,7 @@ export function DynamicScoreCard({ userId }: DynamicScoreCardProps) {
             ))}
           </ul>
         </div>
-        {/* Seção de Pontos de Melhoria */}
+        {/* Seção de indicadores negativos */}
         <div>
           <h4 className="font-semibold text-red-500 mb-2 flex items-center gap-2">
             <XCircle className="h-5 w-5" />

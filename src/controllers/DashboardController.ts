@@ -5,6 +5,7 @@ import { NotificationModel } from "@/models/Notification"
 import { AnalyticsModel, type DashboardMetrics } from "@/models/Analytics"
 import type { User } from "@/types"
 
+// Interface para dados do dashboard
 export interface DashboardData {
   user: User
   metrics: DashboardMetrics
@@ -13,24 +14,27 @@ export interface DashboardData {
   quickActions: any[]
 }
 
+// Controlador responsável por gerenciar dados do dashboard
 export class DashboardController {
+  // Carrega dados do dashboard para tomadores de empréstimo
   static async getBorrowerDashboard(userId: string): Promise<DashboardData | null> {
     try {
+      // Verifica se usuário existe e é tomador
       const user = await AuthController.getCurrentUser(userId)
       if (!user || user.profileType !== "BORROWER") {
         return null
       }
 
-      // Get user's loans
+      // Busca empréstimos do usuário
       const loans = await LoanController.getLoansByBorrower(userId)
 
-      // Calculate metrics
+      // Calcula métricas do tomador
       const metrics = AnalyticsModel.calculateBorrowerMetrics(userId, loans)
 
-      // Get notifications
+      // Busca notificações do usuário
       const notifications = NotificationModel.getNotificationsByUser(userId)
 
-      // Recent activity (simplified)
+      // Atividade recente (últimos 5 empréstimos)
       const recentActivity = loans.slice(0, 5).map((loan) => ({
         id: loan.id,
         type: "loan",
@@ -39,7 +43,7 @@ export class DashboardController {
         date: loan.updatedAt,
       }))
 
-      // Quick actions for borrowers
+      // Ações rápidas para tomadores
       const quickActions = [
         {
           id: "new_loan",
@@ -74,23 +78,25 @@ export class DashboardController {
     }
   }
 
+  // Carrega dados do dashboard para investidores
   static async getInvestorDashboard(userId: string): Promise<DashboardData | null> {
     try {
+      // Verifica se usuário existe e é investidor
       const user = await AuthController.getCurrentUser(userId)
       if (!user || user.profileType !== "INVESTOR") {
         return null
       }
 
-      // Get user's investments
+      // Busca investimentos do usuário
       const investments = await InvestmentController.getInvestmentsByInvestor(userId)
 
-      // Calculate metrics
+      // Calcula métricas do investidor
       const metrics = AnalyticsModel.calculateInvestorMetrics(userId, investments)
 
-      // Get notifications
+      // Busca notificações do usuário
       const notifications = NotificationModel.getNotificationsByUser(userId)
 
-      // Recent activity
+      // Atividade recente (últimos 5 investimentos)
       const recentActivity = investments.slice(0, 5).map((investment) => ({
         id: investment.id,
         type: "investment",
@@ -99,7 +105,7 @@ export class DashboardController {
         date: investment.startDate,
       }))
 
-      // Quick actions for investors
+      // Ações rápidas para investidores
       const quickActions = [
         {
           id: "browse_opportunities",
@@ -134,8 +140,9 @@ export class DashboardController {
     }
   }
 
+  // Marca notificação como lida
   static async markNotificationAsRead(userId: string, notificationId: string): Promise<boolean> {
-    // Verify notification belongs to user
+    // Verifica se notificação pertence ao usuário
     const notifications = NotificationModel.getNotificationsByUser(userId)
     const notification = notifications.find((n) => n.id === notificationId)
 
@@ -146,6 +153,7 @@ export class DashboardController {
     return NotificationModel.markAsRead(notificationId)
   }
 
+  // Conta notificações não lidas do usuário
   static async getUnreadNotificationCount(userId: string): Promise<number> {
     return NotificationModel.getUnreadCount(userId)
   }

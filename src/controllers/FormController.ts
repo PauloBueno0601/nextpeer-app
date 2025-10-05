@@ -1,5 +1,6 @@
 import { ValidationModel, type ValidationResult } from "@/models/Validation"
 
+// Interface para campos de formulário
 export interface FormField {
   name: string
   value: any
@@ -7,6 +8,7 @@ export interface FormField {
   required?: boolean
 }
 
+// Interface para estado do formulário
 export interface FormState {
   fields: Record<string, any>
   errors: Record<string, string>
@@ -15,6 +17,7 @@ export interface FormState {
   isDirty: boolean
 }
 
+// Controlador responsável por gerenciar formulários e validações
 export class FormController {
   private fields: FormField[] = []
   private state: FormState = {
@@ -25,15 +28,18 @@ export class FormController {
     isDirty: false,
   }
 
+  // Construtor que inicializa o formulário com campos definidos
   constructor(fields: FormField[]) {
     this.fields = fields
     this.initializeState()
   }
 
+  // Inicializa o estado do formulário com valores padrão
   private initializeState() {
     const initialFields: Record<string, any> = {}
     const initialErrors: Record<string, string> = {}
 
+    // Configura campos iniciais e erros vazios
     this.fields.forEach((field) => {
       initialFields[field.name] = field.value || ""
       initialErrors[field.name] = ""
@@ -48,14 +54,15 @@ export class FormController {
     }
   }
 
+  // Atualiza valor de um campo e valida
   updateField(name: string, value: any): FormState {
     this.state.fields[name] = value
     this.state.isDirty = true
 
-    // Clear previous error
+    // Limpa erro anterior do campo
     this.state.errors[name] = ""
 
-    // Validate field
+    // Valida o campo atualizado
     const field = this.fields.find((f) => f.name === name)
     if (field) {
       const validationResult = this.validateField(field, value)
@@ -64,14 +71,15 @@ export class FormController {
       }
     }
 
-    // Update form validity
+    // Atualiza validade geral do formulário
     this.state.isValid = this.validateForm().isValid
 
     return { ...this.state }
   }
 
+  // Valida um campo específico
   private validateField(field: FormField, value: any): ValidationResult {
-    // Check required
+    // Verifica se campo obrigatório está preenchido
     if (field.required && (!value || value.toString().trim() === "")) {
       return {
         isValid: false,
@@ -79,7 +87,7 @@ export class FormController {
       }
     }
 
-    // Run custom validators
+    // Executa validadores customizados
     for (const validator of field.validators) {
       const result = validator(value)
       if (!result.isValid) {
@@ -90,9 +98,11 @@ export class FormController {
     return { isValid: true, errors: [] }
   }
 
+  // Valida todo o formulário
   validateForm(): ValidationResult {
     const errors: string[] = []
 
+    // Valida cada campo do formulário
     this.fields.forEach((field) => {
       const value = this.state.fields[field.name]
       const result = this.validateField(field, value)
@@ -111,11 +121,13 @@ export class FormController {
     }
   }
 
+  // Submete o formulário com handler customizado
   async submit<T>(
     submitHandler: (data: Record<string, any>) => Promise<T>,
   ): Promise<{ success: boolean; data?: T; error?: string }> {
     this.state.isSubmitting = true
 
+    // Valida formulário antes de submeter
     const validationResult = this.validateForm()
     if (!validationResult.isValid) {
       this.state.isSubmitting = false
@@ -126,6 +138,7 @@ export class FormController {
     }
 
     try {
+      // Executa handler de submissão
       const result = await submitHandler(this.state.fields)
       this.state.isSubmitting = false
       return { success: true, data: result }
@@ -138,15 +151,18 @@ export class FormController {
     }
   }
 
+  // Retorna estado atual do formulário
   getState(): FormState {
     return { ...this.state }
   }
 
+  // Reseta formulário para estado inicial
   reset() {
     this.initializeState()
   }
 
-  // Static helper methods for common form types
+  // Métodos estáticos para criar formulários comuns
+  // Cria formulário de login
   static createLoginForm(): FormController {
     return new FormController([
       {
@@ -164,6 +180,7 @@ export class FormController {
     ])
   }
 
+  // Cria formulário de cadastro
   static createSignupForm(): FormController {
     return new FormController([
       {
@@ -204,6 +221,7 @@ export class FormController {
     ])
   }
 
+  // Cria formulário de solicitação de empréstimo
   static createLoanRequestForm(): FormController {
     return new FormController([
       {
